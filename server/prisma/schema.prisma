@@ -1,0 +1,308 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  phone     String?
+  role      String   @default("ATHLETE") // ADMIN, ATHLETE, COACH, EMPLOYER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Employer Verification
+  isVerified        Boolean   @default(false)  // Employer verification status
+  verificationToken String?   @unique          // Current active verification token
+  verificationStatus String?  @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED
+  
+  // Relations
+  bookings  Booking[]
+  posts     Post[]
+  postedJobs Job[]
+  athleteProfile AthleteProfile?
+  trainerProfile TrainerProfile?
+  vendorProfile  Vendor?
+  organizedEvents Event[] @relation("EventOrganizer")
+  employerVerification EmployerVerification?
+  notifications Notification[]
+}
+
+model Event {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String
+  type        String
+  price       Float     @default(0)
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
+  maxParticipants Int?
+  organizerId String?
+  organizer   User?     @relation("EventOrganizer", fields: [organizerId], references: [id])
+}
+
+model Booking {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String?
+  status    String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  paymentStatus String @default("UNPAID") // PAID, UNPAID, REFUNDED
+  
+  // Stall Booking / Extra Data
+  businessName    String?
+  stallType       String?
+  requirements    String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?
+  category  String?
+  status    String   @default("DRAFT") // PUBLISHED, DRAFT
+  image     String?
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  video     String?
+  audio     String?
+  gallery   String?  // JSON string
+  tags      String?
+}
+
+
+
+model PageContent {
+  id        String   @id @default(uuid())
+  slug      String   @unique // about, privacy, terms
+  title     String
+  content   String
+  updatedAt DateTime @updatedAt
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  type        String   @default("FULL_TIME")
+  description String?
+  requirements String?
+  benefits     String?
+  department   String?
+  organization String?
+  salary       String?
+  category     String   @default("JOIN_SOCIO_SPORTS") // ATHLETE_OPPORTUNITY, COACHING_POSITION, JOIN_SOCIO_SPORTS
+  applyUrl     String?
+  status       String   @default("OPEN") // OPEN, CLOSED, FILLED
+  postedById   String?
+  postedBy     User?    @relation(fields: [postedById], references: [id])
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Vendor {
+  id          String   @id @default(uuid())
+  businessName String
+  category    String
+  description String?
+  contactPhone String?
+  contactEmail String?
+  location    String?
+  rating      Float    @default(0)
+  image       String?
+  userId      String?  @unique
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  image       String?
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AthleteProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio         String?
+  sports      String?
+  level       String?
+  achievements String?
+  stats       String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TrainerProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization String?
+  certification String?
+  experience  String?
+  bio         String?
+  rate        Float?
+  availability String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inquiry {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  status    String   @default("NEW") // NEW, READ, CONTACTED, ARCHIVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OtpVerification {
+  id        Int      @id @default(autoincrement())
+  email     String?
+  phone     String?
+  otp       String
+  purpose   String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Institution {
+  id               String   @id @default(uuid())
+  name             String
+  type             String   // SCHOOL, COLLEGE, UNIVERSITY, ACADEMY, FACILITY, STADIUM
+  description      String?
+  address          String?
+  city             String?
+  state            String?
+  pincode          String?
+  contactEmail     String?
+  contactPhone     String?
+  website          String?
+  logo             String?
+  coverImage       String?
+  facilities       String?  // JSON array: ["cricket_ground", "football_field", "swimming_pool"]
+  sports           String?  // JSON array: ["cricket", "football", "basketball"]
+  capacity         Int?     // Student/athlete capacity
+  establishedYear  Int?
+  isVerified       Boolean  @default(false)
+  subscriptionTier String   @default("FREE") // FREE, BASIC, PREMIUM
+  features         String?  // JSON array of features enabled
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  bio       String?
+  image     String?
+  linkedin  String?
+  quote     String?
+  category  String   @default("LEADERSHIP") // LEADERSHIP, ADVISOR
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SportsProfile {
+  id              String   @id @default(uuid())
+  sportsId        String   @unique
+  name            String
+  email           String
+  phone           String
+  role            String   // ATHLETE, TRAINER
+  sport           String?  // For Athletes
+  profession      String?  // For Trainers
+  location        String?
+  image           String?
+  dateOfBirth     String?
+  height          String?
+  weight          String?
+  bio             String?  // The athlete/coach story
+  achievements    String?  // JSON array of achievements
+  trainingHistory String?  // JSON array of training records
+  certifications  String?  // JSON array for coaches
+  experience      String?  // e.g. "8 years"
+  specializations String?  // JSON array for coaches
+  socialLinks     String?  // JSON: { instagram, twitter, youtube, linkedin }
+  skills          String?  // JSON array
+  languages       String?  // JSON array: [{ name, level }]
+  hobbies         String?  // JSON array
+  references      String?  // JSON array: [{ name, title, contact }]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model EmployerVerification {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Documents - URLs to uploaded files
+  companyRegistrationUrl String?  // Company Registration Certificate
+  gstCertificateUrl      String?  // GST Certificate if applicable
+  idProofUrl             String?  // ID Proof of authorized person
+  organizationEmail      String?  // Official email
+  contactNumber          String?  // Contact number
+  companyName            String?  // Company/Organization name
+  
+  // Verification Details
+  token       String   @unique  // SOCIO-VER-XXXXX format
+  status      String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED
+  adminRemarks String?          // Rejection reason or notes
+  
+  // Timestamps
+  submittedAt DateTime @default(now())
+  reviewedAt  DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // VERIFICATION_APPROVED, VERIFICATION_REJECTED, etc.
+  isRead    Boolean  @default(false)
+  data      String?  // JSON string for additional data
+  createdAt DateTime @default(now())
+}

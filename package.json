@@ -1,0 +1,16 @@
+{
+    "name": "sociosports-root",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "install:all": "npm install && cd server && npm install && cd ../app && npm install",
+        "dev:server": "cd server && npm run dev",
+        "dev:app": "cd app && npm run dev",
+        "dev": "concurrently \"npm run dev:server\" \"npm run dev:app\"",
+        "build:all": "cd server && npm run build && cd ../app && npm run build",
+        "setup": "powershell -ExecutionPolicy Bypass -File ./setup-local.ps1"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}

@@ -1,0 +1,1140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Theme 1: Deep Navy (Default) */
+    --background: 220 30% 5%;
+    --foreground: 0 0% 100%;
+    --card: 220 25% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 220 25% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 11 100% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 220 10% 70%;
+    --accent: 11 100% 59%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 11 100% 59%;
+    --radius: 0.625rem;
+
+    /* Custom theme colors */
+    --bg-primary: #0B0F17;
+    --bg-secondary: #141B2A;
+    --accent-orange: #FF4D2E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A9B3C7;
+    --tennis-green: rgba(74, 222, 128, 0.22);
+    --court-blue: rgba(59, 130, 246, 0.22);
+    --basketball-orange: rgba(251, 146, 60, 0.22);
+  }
+}
+
+/* Theme overrides MUST be outside @layer for proper CSS variable cascade */
+html.theme-gold {
+  /* Theme 2: Royal Gold */
+  --background: 265 40% 5%;
+  --foreground: 45 90% 98%;
+  --card: 45 35% 10%;
+  --card-foreground: 0 0% 100%;
+  --popover: 45 35% 10%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 45 93% 47%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 45 30% 15%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 45 20% 20%;
+  --muted-foreground: 45 10% 70%;
+  --accent: 45 93% 47%;
+  --accent-foreground: 0 0% 100%;
+  --border: 45 20% 20%;
+  --input: 45 20% 20%;
+  --ring: 45 93% 47%;
+
+  --bg-primary: #12100B;
+  --bg-secondary: #211C11;
+  --accent-orange: #F59E0B;
+  /* Gold/Amber */
+  --text-primary: #FFFbeb;
+  --text-secondary: #FDE68A;
+}
+
+html.theme-blue {
+  /* Theme 3: Light Navy Blue */
+  --background: 210 30% 6%;
+  --foreground: 210 20% 95%;
+  --card: 210 25% 10%;
+  --card-foreground: 210 20% 95%;
+  --popover: 210 25% 10%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 210 76% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 20% 14%;
+  --secondary-foreground: 210 20% 95%;
+  --muted: 210 15% 18%;
+  --muted-foreground: 210 15% 70%;
+  --accent: 210 76% 45%;
+  --accent-foreground: 0 0% 100%;
+  --border: 210 15% 18%;
+  --input: 210 15% 18%;
+  --ring: 210 76% 45%;
+
+  --bg-primary: #08101C;
+  --bg-secondary: #0F1C2E;
+  --accent-orange: #1870cb;
+  /* Light Navy from provided image */
+  --text-primary: #F0F6FF;
+  --text-secondary: #93C5FD;
+}
+
+html.theme-light {
+  /* Theme 4: Light Mode - Beautiful & Clean */
+  --background: 0 0% 98%;
+  --foreground: 220 25% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 25% 20%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 25% 20%;
+  --primary: 11 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 15% 96%;
+  --secondary-foreground: 220 25% 25%;
+  --muted: 220 12% 92%;
+  --muted-foreground: 220 12% 50%;
+  --accent: 11 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 55%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 12% 88%;
+  --input: 220 12% 88%;
+  --ring: 11 100% 50%;
+
+  /* Custom theme colors - optimized for light mode */
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #FFFFFF;
+  --accent-orange: #E53935;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --tennis-green: rgba(22, 163, 74, 0.15);
+  --court-blue: rgba(37, 99, 235, 0.15);
+  --basketball-orange: rgba(234, 88, 12, 0.15);
+}
+
+/* ================================================================
+   LIGHT THEME OVERRIDES - Comprehensive & Beautiful
+   ================================================================ */
+
+/* ===== BASE BODY & HTML ===== */
+html.theme-light body {
+  background-color: var(--bg-primary) !important;
+}
+
+/* ===== NAVIGATION - COMPLETE FIX ===== */
+
+/* Main nav container */
+html.theme-light nav {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Nav pill container - the rounded pill with links */
+html.theme-light nav [class*="bg-black/"],
+html.theme-light nav [class*="bg-[var(--bg-secondary)]"] {
+  background-color: rgba(241, 245, 249, 0.95) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Nav links text colors */
+html.theme-light nav .text-white,
+html.theme-light nav [class*="text-white"] {
+  color: var(--text-primary) !important;
+}
+
+html.theme-light nav [class*="text-gray-400"] {
+  color: var(--text-secondary) !important;
+}
+
+/* Nav link hover states */
+html.theme-light nav [class*="hover:text-white"]:hover,
+html.theme-light nav [class*="hover:text-white/"]:hover {
+  color: var(--text-primary) !important;
+}
+
+html.theme-light nav [class*="hover:bg-white/"]:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+html.theme-light nav [class*="hover:bg-[var(--bg-primary)]"]:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Active nav link with accent color - keep white text */
+html.theme-light nav [class*="bg-[var(--accent-orange)]"] {
+  background-color: var(--accent-orange) !important;
+}
+
+html.theme-light nav [class*="bg-[var(--accent-orange)]"] [class*="text-white"] {
+  color: #FFFFFF !important;
+}
+
+/* Nav borders */
+html.theme-light nav [class*="border-white"] {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Search button in nav */
+html.theme-light nav [class*="bg-[var(--bg-secondary)]"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Mobile menu */
+html.theme-light nav [class*="bg-[var(--bg-primary)]"] {
+  background-color: #FFFFFF !important;
+}
+
+/* ===== LOGO FIX ===== */
+
+/* Remove the negative filter - use proper drop shadow for visibility */
+html.theme-light nav img[alt*="Logo"],
+html.theme-light nav a img {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Add a subtle shadow for contrast if logo has light colors */
+html.theme-light nav .logo-text {
+  color: var(--text-primary) !important;
+  text-shadow: none !important;
+}
+
+/* ===== HERO GRADIENT OVERLAY ===== */
+html.theme-light .gradient-overlay {
+  background: linear-gradient(to right, rgba(248, 250, 252, 0.75) 0%, rgba(248, 250, 252, 0.4) 50%, rgba(248, 250, 252, 0.1) 100%) !important;
+}
+
+/* ===== GLASS CARDS ===== */
+html.theme-light .glass-card {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.theme-light .glass-card-hover:hover {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 20px 40px rgba(229, 57, 53, 0.08) !important;
+}
+
+/* ===== GRAIN OVERLAY ===== */
+html.theme-light .grain-overlay {
+  opacity: 0.008 !important;
+}
+
+/* ===== SECONDARY BUTTON ===== */
+html.theme-light .btn-secondary {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+
+html.theme-light .btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+/* ===== GRID PATTERN ===== */
+html.theme-light .grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px) !important;
+}
+
+/* ===== SCROLLBAR ===== */
+html.theme-light ::-webkit-scrollbar-track {
+  background: #F1F5F9 !important;
+}
+
+html.theme-light ::-webkit-scrollbar-thumb {
+  background: #CBD5E1 !important;
+}
+
+html.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-orange) !important;
+}
+
+html.theme-light ::selection {
+  background: var(--accent-orange) !important;
+  color: white !important;
+}
+
+/* ===== HERO HEADLINES ===== */
+html.theme-light .hero-headline-word {
+  color: var(--text-primary) !important;
+}
+
+html.theme-light .hero-cta .btn-secondary {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ===== INDIA FLAG GRADIENT ===== */
+html.theme-light .india-flag-gradient {
+  background: linear-gradient(180deg, #FF9933 0%, #FF9933 33%, #138808 66%, #138808 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ===== TEXT GRADIENT ===== */
+html.theme-light .text-gradient {
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-orange) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ===== SECTION BACKGROUNDS ===== */
+
+/* Override hardcoded dark section backgrounds */
+html.theme-light section {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Alternate even/odd for visual rhythm */
+html.theme-light section:nth-child(even) {
+  background-color: #FFFFFF !important;
+}
+
+html.theme-light section:nth-child(odd) {
+  background-color: #F8FAFC !important;
+}
+
+/* Cards / containers with hardcoded hex dark backgrounds */
+html.theme-light section [class*="bg-[#0"],
+html.theme-light section [class*="bg-[#1"] {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* ===== TEXT COLORS - COMPREHENSIVE ===== */
+
+/* White text → dark text for light backgrounds */
+html.theme-light .text-white {
+  color: var(--text-primary) !important;
+}
+
+/* Opacity-based white text */
+html.theme-light .text-white\/90,
+html.theme-light .text-white\/80 {
+  color: var(--text-secondary) !important;
+}
+
+html.theme-light .text-white\/70,
+html.theme-light .text-white\/60 {
+  color: #64748B !important;
+}
+
+html.theme-light .text-white\/50,
+html.theme-light .text-white\/40,
+html.theme-light .text-white\/30,
+html.theme-light .text-white\/20 {
+  color: #94A3B8 !important;
+}
+
+/* Gray text utilities */
+html.theme-light .text-gray-50,
+html.theme-light .text-gray-100,
+html.theme-light .text-gray-200 {
+  color: var(--text-primary) !important;
+}
+
+html.theme-light .text-gray-300,
+html.theme-light .text-gray-400,
+html.theme-light .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+html.theme-light .text-gray-600,
+html.theme-light .text-gray-700,
+html.theme-light .text-gray-800,
+html.theme-light .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+/* ===== EXCEPTIONS: KEEP WHITE TEXT ON DARK/ACCENT BACKGROUNDS ===== */
+
+/* Primary button - keep white text */
+html.theme-light .btn-primary,
+html.theme-light .btn-primary .text-white {
+  color: #FFFFFF !important;
+}
+
+/* Accent orange backgrounds - keep white text */
+html.theme-light [class*="bg-[var(--accent-orange)]"],
+html.theme-light [style*="var(--accent-orange)"] {
+  color: #FFFFFF !important;
+}
+
+html.theme-light [class*="bg-[var(--accent-orange)]"] .text-white,
+html.theme-light [style*="var(--accent-orange)"] .text-white {
+  color: #FFFFFF !important;
+}
+
+/* Black backgrounds with opacity - keep white text for hero overlays */
+html.theme-light .hero-bg-image+.gradient-overlay~[class*="bg-black/"],
+html.theme-light .hero-bg-image~div [class*="bg-black/"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+}
+
+html.theme-light .hero-bg-image~div [class*="text-white"] {
+  color: white !important;
+}
+
+/* ===== BORDERS ===== */
+
+html.theme-light [class*="border-white"] {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html.theme-light [class*="border-white/"] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ===== CARDS & CONTAINERS ===== */
+
+/* Make all cards/containers with bg-black visible */
+html.theme-light section>div[class*="bg-black"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Semi-transparent dark backgrounds → light equivalents */
+html.theme-light [class*="bg-black/5"],
+html.theme-light [class*="bg-black/4"],
+html.theme-light [class*="bg-black/3"],
+html.theme-light [class*="bg-black/2"],
+html.theme-light [class*="bg-black/1"] {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+html.theme-light [class*="bg-black/6"],
+html.theme-light [class*="bg-black/7"],
+html.theme-light [class*="bg-black/8"],
+html.theme-light [class*="bg-black/9"] {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Higher opacity black backgrounds */
+html.theme-light [class*="bg-black/10"],
+html.theme-light [class*="bg-black/15"],
+html.theme-light [class*="bg-black/20"] {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ===== FOOTER (keep dark) ===== */
+
+html.theme-light footer {
+  background-color: #0F172A !important;
+}
+
+html.theme-light footer .text-white,
+html.theme-light footer [class*="text-white"] {
+  color: #FFFFFF !important;
+}
+
+html.theme-light footer [class*="border-white"] {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.theme-light footer [class*="text-gray"] {
+  color: #94A3B8 !important;
+}
+
+/* ===== CARD SHADOWS ===== */
+
+html.theme-light .card-sport {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+html.theme-light .card-sport:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ===== SPORT CARD OVERLAYS ===== */
+
+html.theme-light .sport-card-overlay-green::after {
+  background: rgba(74, 222, 128, 0.12) !important;
+}
+
+html.theme-light .sport-card-overlay-blue::after {
+  background: rgba(59, 130, 246, 0.12) !important;
+}
+
+html.theme-light .sport-card-overlay-orange::after {
+  background: rgba(251, 146, 60, 0.12) !important;
+}
+
+/* ===== FORM INPUTS ===== */
+
+html.theme-light input,
+html.theme-light textarea,
+html.theme-light select {
+  background-color: #FFFFFF !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: var(--text-primary) !important;
+}
+
+html.theme-light input::placeholder,
+html.theme-light textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+html.theme-light input:focus,
+html.theme-light textarea:focus,
+html.theme-light select:focus {
+  border-color: var(--accent-orange) !important;
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1) !important;
+}
+
+/* ===== EYEBROW TEXT ===== */
+
+html.theme-light .eyebrow {
+  color: var(--accent-orange) !important;
+}
+
+/* ===== MODALS ===== */
+
+html.theme-light .fixed[class*="bg-black/"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+html.theme-light .fixed [class*="bg-[#0"] {
+  background-color: #FFFFFF !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ===== FEATURE CARD CAROUSEL ===== */
+
+html.theme-light .feature-card .text-white,
+html.theme-light .feature-card [class*="text-white"] {
+  color: #FFFFFF !important;
+}
+
+/* ===== PULSE GLOW ANIMATION ===== */
+
+html.theme-light .animate-pulse-glow {
+  animation: pulse-glow-light 2s infinite !important;
+}
+
+@keyframes pulse-glow-light {
+  0% {
+    box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.35);
+  }
+
+  70% {
+    box-shadow: 0 0 0 15px rgba(229, 57, 53, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 57, 53, 0);
+  }
+}
+
+/* ===== LOGO ===== */
+
+html.theme-light .logo-text {
+  color: var(--text-primary) !important;
+}
+
+/* Remove any filters that make logo look negative */
+html.theme-light nav img[alt*="Logo"],
+html.theme-light nav a img {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* ===== MOBILE MENU ===== */
+
+html.theme-light nav [class*="bg-[var(--bg-primary)]"] {
+  background-color: #FFFFFF !important;
+}
+
+/* ===== ADDITIONAL SECTION FIXES ===== */
+
+/* Hero section specific */
+html.theme-light .hero-bg-image+.gradient-overlay~[class*="bg-black/"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+}
+
+/* Feature cards with gradient backgrounds */
+html.theme-light [class*="bg-gradient-to"] {
+  color: #FFFFFF !important;
+}
+
+html.theme-light [class*="bg-gradient-to"] [class*="text-white"] {
+  color: #FFFFFF !important;
+}
+
+/* Stat navigation dots in hero */
+html.theme-light .hero-cta [class*="bg-white/"] {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html.theme-light .hero-cta [class*="hover:bg-white/"]:hover {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Feature card navigation dots */
+html.theme-light [class*="bg-white/30"] {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html.theme-light [class*="hover:bg-white/50"]:hover {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Floating badges with accent color - keep white text */
+html.theme-light [style*="var(--accent-orange)"] {
+  color: #FFFFFF !important;
+}
+
+/* Live events indicator */
+html.theme-light [class*="bg-green-500/"] {
+  background-color: rgba(34, 197, 94, 0.15) !important;
+}
+
+/* ===== DIVIDERS ===== */
+
+html.theme-light [class*="border-t"] {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+html.theme-light [class*="border-b"] {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ===== SPECIFIC COMPONENT FIXES ===== */
+
+/* Backdrop blur cards */
+html.theme-light [class*="backdrop-blur"] {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Cards with border-white */
+html.theme-light [class*="border-white/"] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Any remaining dark backgrounds */
+html.theme-light [class*="bg-[#0B0F17]"],
+html.theme-light [class*="bg-[#141B2A]"],
+html.theme-light [class*="bg-[#08101C]"],
+html.theme-light [class*="bg-[#0F1C2E]"] {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ===== HARDCODED DARK BACKGROUND FIXES ===== */
+
+/* WhyChooseUs, TrainSmarter, SportsOnWheels, DigitalCard sections */
+html.theme-light [class*="bg-[#0A0A0A]"],
+html.theme-light [class*="bg-[#0a0a0a]"] {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.theme-light [class*="bg-[#0A0A0A]/"],
+html.theme-light [class*="bg-[#0a0a0a]/"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* CorePrinciples section */
+html.theme-light [class*="bg-[#09090b]"],
+html.theme-light [class*="bg-[#09090B]"] {
+  background-color: #F8FAFC !important;
+}
+
+/* WhyChooseUs inner card */
+html.theme-light [class*="bg-[#111]"] {
+  background-color: #F1F5F9 !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ===== LOGO VISIBILITY FIX ===== */
+
+/* Make logo visible on light background - use filter to darken */
+html.theme-light nav img[alt*="Logo"],
+html.theme-light nav a[href="/"] img {
+  filter: brightness(0) !important;
+  opacity: 0.9 !important;
+}
+
+/* Alternative: If logo has transparent background, add subtle shadow */
+html.theme-light .logo-container img,
+html.theme-light a[href="/"] img {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1)) brightness(0) !important;
+}
+
+/* ===== ENHANCED TEXT VISIBILITY ===== */
+
+/* Headings with text-white should be dark on light theme */
+html.theme-light h1.text-white,
+html.theme-light h2.text-white,
+html.theme-light h3.text-white,
+html.theme-light h4.text-white,
+html.theme-light h5.text-white,
+html.theme-light h6.text-white {
+  color: var(--text-primary) !important;
+}
+
+/* Paragraphs and spans with text-white */
+html.theme-light p.text-white,
+html.theme-light span.text-white:not([class*="bg-[var(--accent-orange)"] span),
+html.theme-light div.text-white {
+  color: var(--text-primary) !important;
+}
+
+/* Text with opacity variants */
+html.theme-light .text-white\/90,
+html.theme-light .text-white\/80 {
+  color: var(--text-secondary) !important;
+}
+
+html.theme-light .text-white\/70,
+html.theme-light .text-white\/60,
+html.theme-light .text-white\/50 {
+  color: #64748B !important;
+}
+
+html.theme-light .text-white\/40,
+html.theme-light .text-white\/30,
+html.theme-light .text-white\/20 {
+  color: #94A3B8 !important;
+}
+
+/* ===== PRESERVE WHITE TEXT ON ACCENT BACKGROUNDS ===== */
+
+/* Buttons with accent background keep white text */
+html.theme-light .btn-primary,
+html.theme-light .btn-primary .text-white,
+html.theme-light button[class*="bg-[var(--accent-orange)]"],
+html.theme-light button[class*="bg-[var(--accent-orange)]"] .text-white {
+  color: #FFFFFF !important;
+}
+
+/* Links/badges with accent background */
+html.theme-light a[class*="bg-[var(--accent-orange)]"],
+html.theme-light span[class*="bg-[var(--accent-orange)]"] {
+  color: #FFFFFF !important;
+}
+
+html.theme-light a[class*="bg-[var(--accent-orange)]"] .text-white,
+html.theme-light span[class*="bg-[var(--accent-orange)]"] .text-white {
+  color: #FFFFFF !important;
+}
+
+/* Gradient backgrounds preserve white text */
+html.theme-light [class*="bg-gradient-to"] .text-white,
+html.theme-light [class*="bg-gradient"] .text-white {
+  color: #FFFFFF !important;
+}
+
+/* ===== SECTION-SPECIFIC FIXES ===== */
+
+/* WhyChooseUs section - ensure proper contrast */
+html.theme-light section:has([class*="bg-[#0A0A0A]"]),
+html.theme-light section:has([class*="bg-[#0a0a0a]"]) {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Cards inside sections */
+html.theme-light section [class*="bg-[#111]"] {
+  background-color: #F1F5F9 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* DigitalCard component */
+html.theme-light [class*="bg-[#0f141f]"] {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ===== ADDITIONAL COMPONENT FIXES ===== */
+
+/* Modal overlays - keep dark for focus */
+html.theme-light .fixed[class*="bg-black/"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Modal content */
+html.theme-light .fixed [class*="bg-[#0"] {
+  background-color: #FFFFFF !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Form inputs in modals */
+html.theme-light .fixed input[class*="bg-white/"],
+html.theme-light .fixed select[class*="bg-white/"],
+html.theme-light .fixed textarea[class*="bg-white/"] {
+  background-color: #F8FAFC !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ===== GRADIENT TEXT FIXES ===== */
+
+/* Gradient text should be visible */
+html.theme-light .text-gradient {
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-orange) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* India flag gradient - keep colors */
+html.theme-light .india-flag-gradient {
+  background: linear-gradient(180deg, #FF9933 0%, #FF9933 33%, #FFFFFF 33%, #FFFFFF 66%, #138808 66%, #138808 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ===== ICON AND BADGE FIXES ===== */
+
+/* Icons with white color */
+html.theme-light svg.text-white:not([class*="bg-[var(--accent-orange)]"] svg):not(.btn-primary svg) {
+  color: var(--text-primary) !important;
+}
+
+/* Badges with accent colors keep white text */
+html.theme-light .bg-green-500 .text-white,
+html.theme-light .bg-blue-500 .text-white,
+html.theme-light .bg-red-500 .text-white,
+html.theme-light .bg-yellow-500 .text-white,
+html.theme-light .bg-purple-500 .text-white {
+  color: #FFFFFF !important;
+}
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-orange)];
+    font-family: 'Inter', sans-serif;
+  }
+
+  .section-title {
+    @apply text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight;
+    color: var(--text-primary);
+  }
+
+  .section-subtitle {
+    @apply text-base md:text-lg font-normal;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .card-sport {
+    @apply relative overflow-hidden rounded-[22px] transition-all duration-300;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  }
+
+  .card-sport:hover {
+    transform: translateY(-8px);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300;
+    background-color: var(--accent-orange);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 border;
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    background: transparent;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .gradient-overlay {
+    background: linear-gradient(to right, rgba(11, 15, 23, 0.75) 0%, rgba(11, 15, 23, 0.3) 60%, rgba(11, 15, 23, 0.1) 100%);
+  }
+
+  .grain-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+
+  .sport-card-overlay-green::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(74, 222, 128, 0.18);
+    pointer-events: none;
+  }
+
+  .sport-card-overlay-blue::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(59, 130, 246, 0.18);
+    pointer-events: none;
+  }
+
+  .sport-card-overlay-orange::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(251, 146, 60, 0.18);
+    pointer-events: none;
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-orange) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .india-flag-gradient {
+    background: linear-gradient(180deg, #FF9933 0%, #FF9933 33%, #FFFFFF 33%, #FFFFFF 66%, #138808 66%, #138808 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 3s ease-in-out infinite;
+  }
+
+  /* Glassmorphism utility */
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+
+  .glass-card-hover {
+    transition: all 0.5s ease;
+  }
+
+  .glass-card-hover:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(255, 77, 46, 0.15);
+  }
+
+
+  /* Bento Grid Utility */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(100px, auto);
+    gap: 1.5rem;
+  }
+
+  /* Tilt Container */
+  .tilt-container {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+
+  .tilt-inner {
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+  }
+
+  /* Grid Background */
+  .grid-pattern {
+    background-size: 50px 50px;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+
+  /* Pulse Glow Animation */
+  .animate-pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+
+  @keyframes pulse-glow {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 77, 46, 0.4);
+    }
+
+    70% {
+      box-shadow: 0 0 0 15px rgba(255, 77, 46, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 77, 46, 0);
+    }
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-orange);
+}
+
+/* Selection styling */
+::selection {
+  background: var(--accent-orange);
+  color: white;
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--bg-secondary);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-orange);
+  }
+
+  /* Hide scrollbar for horizontal scroll containers */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
