@@ -29,7 +29,7 @@ const EventCertificateModal: React.FC<Props> = ({ cert, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl bg-[var(--bg-secondary)] rounded-3xl border border-[var(--border)] shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-[var(--bg-secondary)] rounded-3xl border border-[var(--border)] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-white/80 hover:text-white"
@@ -38,7 +38,7 @@ const EventCertificateModal: React.FC<Props> = ({ cert, onClose }) => {
           <X className="w-4 h-4" />
         </button>
 
-        <div className="aspect-video bg-[var(--bg-primary)] flex items-center justify-center overflow-hidden">
+        <div className="h-64 sm:h-72 bg-[var(--bg-primary)] flex items-center justify-center overflow-hidden flex-shrink-0">
           {primaryImage ? (
             <img
               src={primaryImage}
@@ -50,7 +50,7 @@ const EventCertificateModal: React.FC<Props> = ({ cert, onClose }) => {
           )}
         </div>
 
-        <div className="p-6 space-y-3">
+        <div className="flex-1 min-h-0 p-6 space-y-3 overflow-y-auto">
           <div className="flex items-center justify-between gap-2">
             <p className="font-mono text-[11px] text-[var(--accent-orange)] tracking-[0.25em] uppercase">
               {cert.certificate_id}

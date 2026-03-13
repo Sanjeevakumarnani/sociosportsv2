@@ -14,6 +14,7 @@ const VerifyCertificatePage = () => {
   const [form, setForm] = useState({
     fullName: '',
     sportName: '',
+    description: '',
     imageUrl: '',
     imageObject: null as any,
   });
@@ -156,6 +157,9 @@ const VerifyCertificatePage = () => {
       }
       if (selectedSport) {
         payload.sport = selectedSport.id;
+      }
+      if (form.description.trim()) {
+        payload.description = form.description.trim();
       }
 
       const res = await fetch(`${API_URL}/EventCirtificate/${existing.id}?is_screen_for=verifycertificate`, {
@@ -366,6 +370,25 @@ const VerifyCertificatePage = () => {
                   </button>
                 </div>
               )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Share your moments</label>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
+                Tell us more about this match, tournament, or achievement (optional, up to 1000 characters).
+              </p>
+              <textarea
+                value={form.description}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    description: e.target.value.slice(0, 1000),
+                  }))
+                }
+                rows={5}
+                placeholder="What made this moment special? Key highlights, opponents, scores, or anything you want remembered."
+                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent-orange)] focus:outline-none text-sm resize-y"
+                style={{ color: 'var(--text-primary)' }}
+              />
             </div>
             <button
               type="submit"
