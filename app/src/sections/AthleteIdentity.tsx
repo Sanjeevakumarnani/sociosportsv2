@@ -313,7 +313,15 @@ const AthleteIdentity = () => {
       if (photoFile) {
         try {
           const uploadResult = await api.commonUpload(photoFile, 'user');
-          photos = Array.isArray(uploadResult) ? uploadResult : [uploadResult];
+          const rawArray = Array.isArray(uploadResult) ? uploadResult : [uploadResult];
+          photos = rawArray.map((u: any) => {
+            const primaryUrl = u?.Location || u?.url || u?.path || u?.src || '';
+            return {
+              ...u,
+              Location: u?.Location ?? primaryUrl,
+              url: u?.url ?? primaryUrl,
+            };
+          });
         } catch (err) {
           console.error('Photo upload failed', err);
         }

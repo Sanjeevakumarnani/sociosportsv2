@@ -162,6 +162,7 @@ function formatMarkdown(text: string) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function SocioMateBot() {
     const [isOpen, setIsOpen] = useState(false);
+    const [showFloatingLauncher, setShowFloatingLauncher] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -229,6 +230,14 @@ export default function SocioMateBot() {
             setTimeout(() => inputRef.current?.focus(), 500);
         }
     }, [isOpen]);
+
+    // After initial 5s, hide big floating button and show slim docked bar instead
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowFloatingLauncher(false);
+        }, 5000);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         scrollToBottom();
@@ -337,79 +346,108 @@ export default function SocioMateBot() {
 
     return (
         <>
-            {/* ── Floating Button ─────────────────────────────────────────────────── */}
-            <button
-                id="sociomatebot-open-btn"
-                onClick={togglePanel}
-                aria-label="Open SocioMate AI Assistant"
-                style={{
-                    position: 'fixed',
-                    bottom: '24px',
-                    right: '24px',
-                    zIndex: 9999,
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: 'linear-gradient(135deg, #00C756 0%, #0076FF 100%)',
-                    boxShadow: '0 8px 32px rgba(0, 199, 86, 0.45), 0 2px 8px rgba(0,0,0,0.3)',
-                    padding: 0,
-                    overflow: 'hidden',
-                    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s',
-                    transform: isOpen ? 'scale(0.9) rotate(10deg)' : 'scale(1)',
-                    animation: !isOpen ? 'sm-bounce 3s ease-in-out infinite' : 'none',
-                }}
-                onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.12)';
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                        '0 12px 40px rgba(0, 199, 86, 0.65), 0 4px 12px rgba(0,0,0,0.35)';
-                }}
-                onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.transform = isOpen ? 'scale(0.9)' : 'scale(1)';
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                        '0 8px 32px rgba(0, 199, 86, 0.45), 0 2px 8px rgba(0,0,0,0.3)';
-                }}
-            >
-                {isOpen ? (
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="white" style={{ display: 'block', margin: 'auto' }}>
-                        <path d="M18 6L6 18M6 6l12 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                    </svg>
-                ) : (
-                    <img
-                        src="/SocioMate_Bot_icon.png"
-                        alt="SocioMate"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                        onError={(e) => {
-                            // Fallback if image not found
-                            (e.currentTarget as HTMLImageElement).style.display = 'none';
-                            (e.currentTarget.parentElement as HTMLButtonElement).innerHTML = `
+            {/* ── Floating Button (only before auto-dock) ───────────────────────── */}
+            {!isOpen && showFloatingLauncher && (
+                <button
+                    id="sociomatebot-open-btn"
+                    onClick={togglePanel}
+                    aria-label="Open SocioMate AI Assistant"
+                    style={{
+                        position: 'fixed',
+                        bottom: '24px',
+                        right: '24px',
+                        zIndex: 9999,
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: 'linear-gradient(135deg, #00C756 0%, #0076FF 100%)',
+                        boxShadow: '0 8px 32px rgba(0, 199, 86, 0.45), 0 2px 8px rgba(0,0,0,0.3)',
+                        padding: 0,
+                        overflow: 'hidden',
+                        transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s',
+                        transform: isOpen ? 'scale(0.9) rotate(10deg)' : 'scale(1)',
+                        animation: !isOpen ? 'sm-bounce 3s ease-in-out infinite' : 'none',
+                    }}
+                    onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.12)';
+                        (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                            '0 12px 40px rgba(0, 199, 86, 0.65), 0 4px 12px rgba(0,0,0,0.35)';
+                    }}
+                    onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.transform = isOpen ? 'scale(0.9)' : 'scale(1)';
+                        (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                            '0 8px 32px rgba(0, 199, 86, 0.45), 0 2px 8px rgba(0,0,0,0.3)';
+                    }}
+                >
+                    {isOpen ? (
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" style={{ display: 'block', margin: 'auto' }}>
+                            <path d="M18 6L6 18M6 6l12 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+                        </svg>
+                    ) : (
+                        <img
+                            src="/SocioMate_Bot_icon.png"
+                            alt="SocioMate"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                            onError={(e) => {
+                                // Fallback if image not found
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                (e.currentTarget.parentElement as HTMLButtonElement).innerHTML = `
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="display:block;margin:auto">
                   <circle cx="12" cy="8" r="4" fill="white"/>
                   <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="white" opacity="0.8"/>
                   <circle cx="17" cy="6" r="3" fill="#FFD700"/>
                   <path d="M15 6l1 1 2-2" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>`;
-                        }}
-                    />
-                )}
-                {/* Pulse ring */}
-                {!isOpen && (
-                    <span
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            borderRadius: '50%',
-                            border: '2px solid rgba(0, 199, 86, 0.6)',
-                            animation: 'sm-pulse-ring 2s ease-out infinite',
-                            pointerEvents: 'none',
-                        }}
-                    />
-                )}
-            </button>
+                            }}
+                        />
+                    )}
+                    {/* Pulse ring */}
+                    {!isOpen && (
+                        <span
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                borderRadius: '50%',
+                                border: '2px solid rgba(0, 199, 86, 0.6)',
+                                animation: 'sm-pulse-ring 2s ease-out infinite',
+                                pointerEvents: 'none',
+                            }}
+                        />
+                    )}
+                </button>
+            )}
 
-            {/* Tooltip */}
-            {!isOpen && (
+            {/* Docked tab (minimal, attached to right edge) */}
+            {!showFloatingLauncher && !isOpen && (
+                <button
+                    type="button"
+                    onClick={togglePanel}
+                    aria-label="Open SocioMate chat"
+                    style={{
+                        position: 'fixed',
+                        bottom: '32px',
+                        right: 0,
+                        zIndex: 9999,
+                        padding: '10px 8px',
+                        borderRadius: '999px 0 0 999px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: 'linear-gradient(135deg, #00C756 0%, #0076FF 100%)',
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        boxShadow: '-4px 6px 20px rgba(0,0,0,0.4)',
+                        fontSize: '16px',
+                    }}
+                >
+                    <span style={{ fontSize: '20px' }}>💬</span>
+                </button>
+            )}
+
+            {/* Tooltip (only while floating button is visible) */}
+            {!isOpen && showFloatingLauncher && (
                 <div
                     style={{
                         position: 'fixed',

@@ -189,6 +189,19 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
       }
 
       // User/create with upload response in images array (same as Build your identity)
+      let photos: any[] = [];
+      if (uploadedImageResponse) {
+        const rawArray = Array.isArray(uploadedImageResponse) ? uploadedImageResponse : [uploadedImageResponse];
+        photos = rawArray.map((u: any) => {
+          const primaryUrl = u?.Location ?? u?.url ?? u?.path ?? u?.src ?? '';
+          return {
+            ...u,
+            Location: u?.Location ?? primaryUrl,
+            url: u?.url ?? primaryUrl,
+          };
+        });
+      }
+
       await api.userCreate({
         first_name: formData.fullName,
         phonenumber: phoneDigits,
@@ -196,7 +209,7 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
         dob: '2000-01-01',
         user_type: identity === 'ATHLETE' ? 'Sportsman/Athlete' : identity === 'TRAINER' ? 'Trainer' : 'General',
         professional_title: formData.profession || undefined,
-        images: uploadedImageResponse ? [uploadedImageResponse] : [],
+        photos: photos.length > 0 ? photos : undefined,
       });
 
       // Optional: only run if backend has these endpoints; do not block success
@@ -222,7 +235,7 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
         console.warn('finishRegistration skipped:', (e as Error).message);
       }
       try {
-        await api.sportsProfiles.create({
+        const createdProfile = await api.sportsProfiles.create({
           sportsId,
           name: formData.fullName,
           email: formData.email,
@@ -233,6 +246,14 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
           location: formData.location,
           image: profileImage
         });
+        const realId =
+          (createdProfile as any)?.sportsId ??
+          (createdProfile as any)?.sports_id ??
+          (createdProfile as any)?.member_id ??
+          (createdProfile as any)?.id;
+        if (realId) {
+          setSportsId(String(realId));
+        }
       } catch (e) {
         console.warn('sportsProfiles.create skipped:', (e as Error).message);
       }
@@ -759,7 +780,7 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
                 </div>
                 <div className="flex-1 flex items-center justify-between">
                   <div>
-                    <h4 className="text-white font-black uppercase text-[10px] tracking-widest opacity-50">National Sports Id</h4>
+                    <h4 className="text-white font-black uppercase text-[10px] tracking-widest opacity-50">Unique Sports ID</h4>
                     <p className="text-xl font-black text-[var(--accent-orange)] tracking-widest">
                       {sportsId}
                     </p>

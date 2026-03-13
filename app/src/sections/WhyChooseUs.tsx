@@ -73,7 +73,9 @@ const WhyChooseUs = () => {
                                 </p>
                                 <div className="h-px w-full bg-[var(--border)] mb-6" />
                                 <p className="text-[var(--text-secondary)] leading-relaxed text-base">
-                                    The problem isn't talent—it's infrastructure and access. SocioSports builds the digital bridges to democratize sports for everyone, from weekend warriors to future champions.
+                                    The problem isn't talent—it's infrastructure and access.{' '}
+                                    <span className="text-[var(--accent-orange)] font-semibold">SocioSports</span>{' '}
+                                    builds the digital bridges to democratize sports for everyone, from weekend warriors to future champions.
                                 </p>
                             </div>
                         </div>

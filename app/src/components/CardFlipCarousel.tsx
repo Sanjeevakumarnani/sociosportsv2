@@ -21,23 +21,36 @@ interface CardData {
   accent: string;
 }
 
+// NOTE: Keeping original cards commented out for future use / easy restoration.
+// const CARDS: CardData[] = [
+//   {
+//     id: 1,
+//     frontImage: '/images/athlete_story_feature.png',
+//     frontLabel: 'COMMUNITY',
+//     backTitle: 'Athlete Network',
+//     backBody: 'Connect with athletes nationwide, share your journey, and find training partners in your local area.',
+//     accent: '#ff4d1c'
+//   },
+//   {
+//     id: 2,
+//     frontImage: '/images/sports_profile_mockup.png',
+//     frontLabel: 'IDENTITY',
+//     backTitle: 'Digital Identity',
+//     backBody: 'Your verified sports profile tracking achievements, stats, and certifications in one unified identity.',
+//     accent: '#ff6b35'
+//   },
+//   {
+//     id: 4,
+//     frontImage: '/images/about_vision.png',
+//     frontLabel: 'VISION',
+//     backTitle: 'Future of Sports',
+//     backBody: "Join India's sports revolution. We are building the digital backbone for the entire sports ecosystem.",
+//     accent: '#ff6b35'
+//   }
+// ];
+
+// Currently showing only the COMPETE card in the carousel.
 const CARDS: CardData[] = [
-  {
-    id: 1,
-    frontImage: '/images/athlete_story_feature.png',
-    frontLabel: 'COMMUNITY',
-    backTitle: 'Athlete Network',
-    backBody: 'Connect with athletes nationwide, share your journey, and find training partners in your local area.',
-    accent: '#ff4d1c'
-  },
-  {
-    id: 2,
-    frontImage: '/images/sports_profile_mockup.png',
-    frontLabel: 'IDENTITY',
-    backTitle: 'Digital Identity',
-    backBody: 'Your verified sports profile tracking achievements, stats, and certifications in one unified identity.',
-    accent: '#ff6b35'
-  },
   {
     id: 3,
     frontImage: '/images/tournament_discovery.png',
@@ -45,14 +58,6 @@ const CARDS: CardData[] = [
     backTitle: 'Tournament Hub',
     backBody: 'Discover and register for tournaments. Get real-time updates and track your performance history.',
     accent: '#ff4d1c'
-  },
-  {
-    id: 4,
-    frontImage: '/images/about_vision.png',
-    frontLabel: 'VISION',
-    backTitle: 'Future of Sports',
-    backBody: "Join India's sports revolution. We are building the digital backbone for the entire sports ecosystem.",
-    accent: '#ff6b35'
   }
 ];
 
@@ -321,7 +326,7 @@ export default function CardFlipCarousel() {
   }, [isHovered, isFlipped, handleNext]);
 
   // Virtual positions for rendering infinite loop
-  const visibleVirtualPositions = [];
+  const visibleVirtualPositions: number[] = [];
   for (let i = -2; i <= 2; i++) {
     visibleVirtualPositions.push(activeIndex + i);
   }
