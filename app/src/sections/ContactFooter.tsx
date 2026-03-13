@@ -73,14 +73,14 @@ const ContactFooter = () => {
       { label: 'Coaches', href: '/#coaches' },
       { label: 'Events', href: '/#events' },
       { label: 'Community', href: '/#community' },
-      { label: 'Jobs', href: '/#jobs' },
+      // { label: 'Jobs', href: '/#jobs' }, // hidden
     ],
     Company: [
       { label: 'About Us', href: '/#about' },
       { label: 'Careers', href: '#' },
       { label: 'Press', href: '#' },
       { label: 'Blog', href: '#' },
-      { label: 'Partners', href: '#' },
+      { label: 'Partners', href: '/contact?reason=partner' },
     ],
     Support: [
       { label: 'Help Center', href: '#' },

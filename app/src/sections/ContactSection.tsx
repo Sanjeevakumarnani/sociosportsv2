@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Mail, Phone, MapPin, Send, Check, Instagram, Linkedin, Youtube, Twitter, Calendar, Users } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Check, Instagram, Linkedin, Youtube, Twitter, Calendar, Users, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAnalytics } from '../components/AnalyticsProvider';
 import { api } from '../services/api';
 
@@ -53,7 +54,23 @@ const ContactSection = () => {
         message: ''
     });
 
+    // Initialize reason from URL query (?reason=partner or ?reason=book-event)
+    useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const reasonParam = params.get('reason');
+            if (reasonParam === 'partner') {
+                setFormData(prev => ({ ...prev, reason: 'Partner with Us' }));
+            } else if (reasonParam === 'book-event') {
+                setFormData(prev => ({ ...prev, reason: 'Book an Event' }));
+            }
+        } catch {
+            // ignore URL parsing errors
+        }
+    }, []);
+
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -96,37 +113,48 @@ const ContactSection = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.name && formData.email && formData.message) {
-            try {
+        if (!formData.name?.trim() || !formData.email?.trim() || !formData.message?.trim()) {
+            toast.error('Please fill in name, email, and message.');
+            return;
+        }
+        setIsSubmitting(true);
+        try {
                 if (formData.reason === 'Book an Event') {
-                    // Map Contact Form to Booking Schema
-                    const submissionData = {
-                        businessName: formData.name,
-                        contactPerson: formData.name,
-                        email: formData.email,
-                        phone: formData.phone,
-                        stallType: 'BOOK_EVENT',
-                        requirements: `Type: ${formData.eventType} | Venue: ${formData.eventVenue} | Date: ${formData.eventDate} | Footfall: ${formData.footfall} | Msg: ${formData.message}`
-                    };
-
-                    await api.createBooking(submissionData);
+                    await api.submitEventBooking({
+                        request_type: 'event_booking',
+                        organization_name: formData.name.trim(),
+                        event_type: formData.eventType || 'Event',
+                        email: formData.email.trim(),
+                        phone_number: formData.phone?.trim() || '',
+                        description: [formData.eventType && `Type: ${formData.eventType}`, formData.message?.trim()]
+                            .filter(Boolean)
+                            .join('. ') || formData.message?.trim() || '',
+                    });
 
                     trackEvent('submit_booking_request', {
                         type: formData.eventType,
                         has_event_details: true
                     });
                 } else {
-                    // Start of: General Inquiry & Partner with Us
-                    // Use Inquiry API
-                    const inquiryData = {
-                        name: formData.name,
-                        email: formData.email,
-                        phone: formData.phone,
-                        subject: formData.reason,
-                        message: formData.message
-                    };
-
-                    await api.createInquiry(inquiryData);
+                    // General Inquiry: use Settings/helpsupport API (fixed request_type & subject)
+                    if (formData.reason === 'General Inquiry') {
+                        await api.submitHelpSupport({
+                            full_name: formData.name,
+                            email: formData.email,
+                            phonenumber: formData.phone || '',
+                            description: formData.message
+                        });
+                    } else {
+                        // Partner with Us: use existing inquiry API
+                        const inquiryData = {
+                            name: formData.name,
+                            email: formData.email,
+                            phone: formData.phone,
+                            subject: formData.reason,
+                            message: formData.message
+                        };
+                        await api.createInquiry(inquiryData);
+                    }
 
                     trackEvent('submit_inquiry', {
                         type: formData.reason
@@ -138,6 +166,7 @@ const ContactSection = () => {
                 });
 
                 setIsSubmitted(true);
+                toast.success('Message sent! We\'ll get back to you soon.');
                 setTimeout(() => {
                     setIsSubmitted(false);
                     setFormData({
@@ -155,9 +184,11 @@ const ContactSection = () => {
             } catch (error) {
                 console.error("Contact form failed", error);
                 trackFormSubmission('Contact Form', false, { error: (error as Error).message });
-                // Fail silently or show a toast in future
+                const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+                toast.error(message);
+            } finally {
+                setIsSubmitting(false);
             }
-        }
     };
 
     const contactInfo = [
@@ -169,8 +200,6 @@ const ContactSection = () => {
     const socialLinks = [
         { icon: Instagram, href: settings.socials.instagram, label: 'Instagram' },
         { icon: Linkedin, href: settings.socials.linkedin, label: 'LinkedIn' },
-        { icon: Twitter, href: settings.socials.twitter, label: 'Twitter' },
-        { icon: Youtube, href: settings.socials.youtube, label: 'YouTube' },
     ];
 
     const reasons = ['General Inquiry', 'Book an Event', 'Partner with Us'];
@@ -348,51 +377,25 @@ const ContactSection = () => {
                                             {/* Conditional Event Fields */}
                                             {formData.reason === 'Book an Event' && (
                                                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                    <div className="grid md:grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">
+                                                            Event Type
+                                                        </label>
                                                         <div className="relative">
                                                             <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
-                                                            <input
-                                                                type="date"
-                                                                value={formData.eventDate}
-                                                                onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                                                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 pl-12 pr-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors dark-date-input"
+                                                            <select
+                                                                value={formData.eventType}
+                                                                onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                                                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 pl-11 pr-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors appearance-none"
                                                                 style={{ color: 'var(--text-primary)' }}
-                                                                aria-label="Event Date"
-                                                            />
+                                                            >
+                                                                <option value="">Select event type</option>
+                                                                <option value="Residential League">Residential League</option>
+                                                                <option value="School Sports Day">School Sports Day</option>
+                                                                <option value="Corporate Carnival">Corporate Carnival</option>
+                                                                <option value="Other">Other</option>
+                                                            </select>
                                                         </div>
-                                                        <div className="relative">
-                                                            <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Expected Gathering (e.g. 500+)"
-                                                                value={formData.footfall}
-                                                                onChange={(e) => setFormData({ ...formData, footfall: e.target.value })}
-                                                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 pl-12 pr-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors"
-                                                                style={{ color: 'var(--text-primary)' }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid md:grid-cols-2 gap-4">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Event Venue/City"
-                                                            value={formData.eventVenue}
-                                                            onChange={(e) => setFormData({ ...formData, eventVenue: e.target.value })}
-                                                            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors"
-                                                            style={{ color: 'var(--text-primary)' }}
-                                                        />
-                                                        <select
-                                                            value={formData.eventType}
-                                                            onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                                                            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors appearance-none"
-                                                            style={{ color: 'var(--text-primary)' }}
-                                                        >
-                                                            <option value="">Event Type</option>
-                                                            <option>Tournament</option>
-                                                            <option>Training Camp</option>
-                                                            <option>Community Engagement</option>
-                                                            <option>Corporate Sports Day</option>
-                                                        </select>
                                                     </div>
                                                 </div>
                                             )}
@@ -409,9 +412,9 @@ const ContactSection = () => {
                                                 />
                                             </div>
 
-                                            <button type="submit" aria-label={formData.reason === 'Book an Event' ? 'Submit Booking Request' : 'Send message'} className="w-full btn-primary gap-2 py-4">
-                                                <Send className="w-4 h-4" />
-                                                {formData.reason === 'Book an Event' ? 'Submit Booking Request' : 'Send message'}
+                                            <button type="submit" disabled={isSubmitting} aria-label={formData.reason === 'Book an Event' ? 'Submit Booking Request' : 'Send message'} className="w-full btn-primary gap-2 py-4 disabled:opacity-70 disabled:pointer-events-none">
+                                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                                {isSubmitting ? 'Sending...' : (formData.reason === 'Book an Event' ? 'Submit Booking Request' : 'Send message')}
                                             </button>
                                         </form>
                                     </>

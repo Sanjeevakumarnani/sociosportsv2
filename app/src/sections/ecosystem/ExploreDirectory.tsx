@@ -19,9 +19,11 @@ interface Profile {
     role: string; // 'ATHLETE' | 'COACH'
     sport?: string;
     specialization?: string; // For coaches
-    location?: string;
+    city?: string;
     image?: string;
     description?: string; // Bio
+    email?: string;
+    phone?: string;
     achievements?: string;
     stats?: { matches: number; wins: number } | any;
     rating?: number;
@@ -35,39 +37,90 @@ const ExploreDirectory = () => {
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch initial data (recently joined or all)
+    // Fetch initial data (recently joined or all) and keyword search
     const fetchProfiles = async (type: 'athletes' | 'coaches', query: string = '') => {
         setIsLoading(true);
         try {
-            let data = [];
-            // Use search API for both initial load (empty query) and search
-            // The backend now supports empty query returning recent profiles
-            const searchResults = await api.sportsProfiles.search(query);
+            // Use backend /User/athletes-trainers for both initial load and search
+            const response = await api.sportsProfiles.search(query);
+            const rows = response.rows ?? [];
 
-            // Handle response structure (check if array or object)
-            const results = Array.isArray(searchResults) ? searchResults : (searchResults.data || []);
+            const normalized: Profile[] = rows.map((item: any) => {
+                const rawType = (item.user_type || '').toLowerCase();
+                const isAthlete = rawType.includes('sportsman') || rawType.includes('athelete') || rawType.includes('athlete');
+                const role = isAthlete ? 'ATHLETE' : 'TRAINER';
 
-            // Filter by active tab role
-            const roleFilter = type === 'athletes' ? 'ATHLETE' : 'TRAINER';
-            data = results.filter((p: any) => p.role === roleFilter);
+                const firstName = item.first_name || '';
+                const lastName = item.last_name || '';
+                const fullName = `${firstName} ${lastName}`.trim() || 'New Member';
 
-            const normalized = data.map((item: any) => ({
-                id: item.id || item._id,
-                sportsId: item.sportsId || 'N/A',
-                name: item.name,
-                role: item.role || (type === 'athletes' ? 'ATHLETE' : 'TRAINER'),
-                sport: item.sport || item.specialization || 'General',
-                location: item.location || 'India',
-                image: item.image,
-                description: item.bio || item.description || "Recently joined the journey. Congrats for a wonderful start and great achievements to come.",
-                stats: item.stats || { matches: '-', wins: '-' },
-                rating: item.rating || 5.0,
-                students: item.students || 'New',
-                experience: item.experience || 'Fresher'
-            })).slice(0, 4); // Limit to 4 for display
+                // Sports ID shown on card must be member_id
+                const sportsId = item.member_id || 'N/A';
 
-            setProfiles(normalized);
+                // Derive sport / specialization and basic description
+                const sportLabel = item.professional_title || (isAthlete ? 'Athlete' : 'Coach');
+                const description =
+                    item.technical_overview ||
+                    `Recently joined the journey. Congrats for a wonderful start and great achievements to come.`;
 
+                // Try to pick a primary photo if available
+                let image: string | undefined;
+                if (Array.isArray(item.photos) && item.photos.length > 0) {
+                    const firstPhoto = item.photos[0];
+                    if (typeof firstPhoto === 'string') {
+                        image = firstPhoto;
+                    } else if (firstPhoto && typeof firstPhoto === 'object') {
+                        image =
+                            firstPhoto.Location ||
+                            firstPhoto.url ||
+                            firstPhoto.path ||
+                            firstPhoto.src;
+                    }
+                } else if (Array.isArray(item.cover_photos) && item.cover_photos.length > 0) {
+                    const firstCover = item.cover_photos[0];
+                    if (typeof firstCover === 'string') {
+                        image = firstCover;
+                    } else if (firstCover && typeof firstCover === 'object') {
+                        image =
+                            firstCover.Location ||
+                            firstCover.url ||
+                            firstCover.path ||
+                            firstCover.src;
+                    }
+                }
+
+                return {
+                    id: String(item.id ?? item.user_id ?? sportsId),
+                    sportsId,
+                    name: fullName,
+                    role,
+                    sport: sportLabel,
+                    specialization: !isAthlete ? sportLabel : undefined,
+                    location: item.city || 'India',
+                    image,
+                    description,
+                    email: item.email ?? item.email_id ?? item.user_email ?? undefined,
+                    phone: item.phone ?? item.mobile ?? item.phone_number ?? undefined,
+                    stats: { matches: '-', wins: '-' },
+                    rating: 5.0,
+                    students: 'New',
+                    experience: 'Fresher'
+                };
+            });
+
+            // Filter by active tab: athletes vs coaches/trainers
+            let filtered = normalized.filter((p) =>
+                type === 'athletes' ? p.role === 'ATHLETE' : p.role !== 'ATHLETE'
+            );
+
+            // If role-based filter removed everything (unexpected user_type values),
+            // fall back to the full normalized list so cards are not empty.
+            if (filtered.length === 0) {
+                filtered = normalized;
+            }
+
+            // Limit to 4 for display
+            setProfiles(filtered.slice(0, 4));
         } catch (error) {
             console.error('Failed to fetch profiles', error);
         } finally {
@@ -131,7 +184,7 @@ const ExploreDirectory = () => {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
                         <input
                             type="text"
-                            placeholder={`Search ${activeTab} by name, sport, or location...`}
+                            placeholder={`Search ${activeTab} by name, sport, or city...`}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors"
@@ -181,7 +234,7 @@ const ExploreDirectory = () => {
                                             <h3 className="text-base font-black text-[var(--text-primary)] truncate group-hover:text-white transition-colors">{profile.name}</h3>
                                             <div className="flex items-center gap-1 text-[11px] text-[var(--text-secondary)] truncate mt-1">
                                                 <MapPin className="w-3 h-3" />
-                                                <span>{profile.location}</span>
+                                                <span>{profile.city}</span>
                                             </div>
                                         </div>
                                     </div>

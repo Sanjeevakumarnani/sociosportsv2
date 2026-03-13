@@ -46,10 +46,11 @@ const SimpleFooter = () => {
             { label: 'About Us', href: '/about' },
             { label: 'Careers', href: '/careers' },
             { label: 'Blog', href: '/blog' },
-            { label: 'Partners', href: '/contact' },
+            { label: 'Partners', href: '/contact?reason=partner' },
         ],
         Support: [
             { label: 'Contact Us', href: '/contact' },
+            { label: 'Verify Certificate', href: '/verify-certificate/demo' },
             { label: 'Privacy Policy', href: '/privacy-policy' },
             { label: 'Terms of Service', href: '/terms-conditions' },
             { label: 'Child Safety', href: '/child-safety' },

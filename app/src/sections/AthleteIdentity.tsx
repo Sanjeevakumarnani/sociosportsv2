@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { User, Mail, Trophy, Check, ArrowRight, Award, Star, Phone } from 'lucide-react';
+import { User, Mail, Trophy, Check, ArrowRight, Award, Star, Phone, Upload } from 'lucide-react';
 import { api } from '../services/api';
-import OTPModal from '../components/OTPModal';
+import OTPModal, { type VerifyResult } from '../components/OTPModal';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -182,15 +182,14 @@ const ProblemStatement = () => {
 const AthleteIdentity = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
     email: '',
-    phone: '',
-    sport: '',
+    phonenumber: '',
+    professional_title: '',
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const sports = ['Badminton', 'Basketball', 'Tennis', 'Cricket', 'Football', 'Swimming'];
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -266,49 +265,90 @@ const AthleteIdentity = () => {
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name && formData.email && formData.sport && formData.phone) {
-      setIsSubmitting(true);
-      try {
-        // Send OTP
-        await api.otp.send(formData.email, 'athlete_identity');
-        setIsSubmitting(false);
-        setShowOtpModal(true);
-      } catch (error) {
-        console.error(error);
-        setIsSubmitting(false);
-        alert('Failed to send OTP. Please try again.');
-      }
+    const rawPhone = (formData.phonenumber || '').replace(/\D/g, '');
+    const phone = rawPhone.trim();
+    const name = (formData.first_name || '').trim();
+    const email = (formData.email || '').trim();
+    const title = (formData.professional_title || '').trim();
+
+    // Basic email and phone validations
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      alert('Please enter a valid 10-digit mobile number (numbers only).');
+      return;
+    }
+
+    if (!name || !email || !title || !phone) {
+      alert('Please fill in name, email, profession and mobile number.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await api.userLogin(phone);
+      setIsSubmitting(false);
+      setShowOtpModal(true);
+    } catch (error) {
+      console.error(error);
+      setIsSubmitting(false);
+      alert(error instanceof Error ? error.message : 'Failed to send OTP. Please try again.');
     }
   };
 
-  const handleVerifyAndSubmit = async (otp: string): Promise<boolean> => {
+  const handleVerifyAndSubmit = async (otp: string): Promise<VerifyResult> => {
+    const phone = (formData.phonenumber || '').replace(/\D/g, '').trim();
+    if (!phone) return false;
+    const userExistsMessage = 'User already exists. Use a different number.';
     try {
-      const { success } = await api.otp.verify(formData.email, otp, 'athlete_identity');
-      if (success) {
-        // Proceed with creation
-        await api.createBooking({
-          businessName: 'Individual Athlete',
-          stallType: 'ATHLETE_REGISTRY',
-          requirements: `Sport: ${formData.sport} | Level: Entry`,
-          contactPerson: formData.name,
-          phone: formData.phone,
-          email: formData.email
-        });
-
-        setIsSubmitted(true);
-        setTimeout(() => setIsSubmitted(false), 5000);
-        setFormData({ name: '', email: '', phone: '', sport: '' });
-        return true;
+      const res = await api.userLoginWithOtp(phone, otp);
+      if (res?.token) {
+        return { success: false, message: userExistsMessage, variant: 'info' };
       }
-      return false;
+
+      let photos: any[] = [];
+      if (photoFile) {
+        try {
+          const uploadResult = await api.commonUpload(photoFile, 'user');
+          photos = Array.isArray(uploadResult) ? uploadResult : [uploadResult];
+        } catch (err) {
+          console.error('Photo upload failed', err);
+        }
+      }
+
+      await api.userCreate({
+        first_name: formData.first_name.trim() || 'Athlete',
+        email: formData.email.trim() || undefined,
+        phonenumber: phone,
+        dob: '2000-01-01',
+        user_type: 'Sportsman/Athlete',
+        photos: photos.length > 0 ? photos : undefined,
+        professional_title: formData.professional_title || undefined,
+      });
+
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({ first_name: '', email: '', phonenumber: '', professional_title: '' });
+        setPhotoFile(null);
+      }, 5000);
+      return true;
     } catch (error) {
       console.error(error);
+      const msg = error instanceof Error ? error.message : '';
+      if (/already exists|user exists|duplicate/i.test(msg)) {
+        return { success: false, message: userExistsMessage, variant: 'info' };
+      }
       return false;
     }
   };
 
   const handleResendOtp = async () => {
-    await api.otp.send(formData.email, 'athlete_identity');
+    const phone = (formData.phonenumber || '').replace(/\D/g, '').trim();
+    if (phone) await api.userLogin(phone);
   };
 
   return (
@@ -443,7 +483,7 @@ const AthleteIdentity = () => {
                     <Check className="w-8 h-8 text-green-500" />
                   </div>
                   <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Verification Successful!</h3>
-                  <p className="text-[var(--text-secondary)]">Welcome to SocioSports. Check your email for next steps.</p>
+                  <p className="text-[var(--text-secondary)]">Your sports identity has been created. Welcome to SocioSports!</p>
                 </div>
               ) : (
                 <>
@@ -457,8 +497,18 @@ const AthleteIdentity = () => {
                       <input
                         type="text"
                         placeholder="Full Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        value={formData.first_name}
+                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-4 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
+                      <input
+                        type="email"
+                        placeholder="Email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-4 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors"
                       />
                     </div>
@@ -467,42 +517,46 @@ const AthleteIdentity = () => {
                       <input
                         type="tel"
                         placeholder="Mobile Number"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-4 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors"
-                      />
-                    </div>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
-                      <input
-                        type="email"
-                        placeholder="Email address"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        value={formData.phonenumber}
+                        maxLength={10}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setFormData({ ...formData, phonenumber: digitsOnly });
+                        }}
                         className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-4 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors"
                       />
                     </div>
                     <div className="relative">
                       <Trophy className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
-                      <select
-                        value={formData.sport}
-                        onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
-                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors appearance-none"
-                      >
-                        <option value="" className="bg-[var(--bg-primary)]">Select primary sport</option>
-                        {sports.map((sport) => (
-                          <option key={sport} value={sport} className="bg-[var(--bg-primary)]">
-                            {sport}
-                          </option>
-                        ))}
-                      </select>
+                      <input
+                        type="text"
+                        placeholder="Profession (e.g. Badminton Athlete)"
+                        value={formData.professional_title}
+                        onChange={(e) => setFormData({ ...formData, professional_title: e.target.value })}
+                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-4 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1">
+                        Profile image (optional)
+                      </label>
+                      <div className="relative">
+                        <Upload className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-4 text-[var(--text-primary)] file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-[var(--accent-orange)]/20 file:text-[var(--accent-orange)]"
+                        />
+                      </div>
+                      {photoFile && <span className="text-xs text-[var(--text-secondary)] mt-1 block">Photo: {photoFile.name}</span>}
                     </div>
                     <button
                       type="submit"
-                      disabled={!formData.name || !formData.phone || !formData.sport}
+                      disabled={!formData.first_name.trim() || !formData.email.trim() || !formData.professional_title.trim() || (formData.phonenumber || '').replace(/\D/g, '').length !== 10 || isSubmitting}
                       className="w-full btn-primary gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isSubmitting ? 'Sending OTP...' : 'Create Your Sports Identity'}
+                      {isSubmitting ? 'Sending OTP...' : 'Get OTP & Create Sports Identity'}
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -516,13 +570,10 @@ const AthleteIdentity = () => {
             <OTPModal
               isOpen={showOtpModal}
               onClose={() => setShowOtpModal(false)}
-              email={formData.email}
+              phone={formData.phonenumber.trim() || undefined}
               onVerify={handleVerifyAndSubmit}
               onResend={handleResendOtp}
             />
-
-            {/* Quote Carousel */}
-            <QuoteCarousel />
           </div>
 
           {/* Right - Image */}
@@ -560,34 +611,8 @@ const AthleteIdentity = () => {
               Because your sports journey is more than moments — it's a career, an identity, a legacy.
             </p>
 
-            {/* Who is searching for you? section to fill space */}
-            <div className="mt-8 p-6 rounded-2xl bg-gradient-to-br from-[var(--bg-primary)] to-[var(--bg-primary)]/5 border border-[var(--border)] shadow-xl relative z-10 transition-transform hover:scale-[1.02] duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-[10px] font-black text-[var(--accent-orange)] uppercase tracking-[0.2em]">Ecosystem Access</h4>
-                <div className="flex -space-x-2">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="w-6 h-6 rounded-full border-2 border-[var(--bg-primary)] bg-[var(--bg-secondary)] flex items-center justify-center">
-                      <div className="w-full h-full rounded-full bg-gradient-to-br from-[var(--text-primary)]/20 to-transparent" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <p className="text-xs font-bold text-[var(--text-primary)] mb-4">Who is searching for profiles like yours?</p>
-              <div className="grid grid-cols-2 gap-3 text-center">
-                {[
-                  { label: 'Pro Scouts', val: '500+' },
-                  { label: 'State Clubs', val: '1.2k' },
-                  { label: 'Sponsors', val: '200+' },
-                  { label: 'Academies', val: '3k+' },
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-[var(--bg-secondary)] p-3 rounded-xl border border-[var(--border)]">
-                    <div className="text-lg font-black text-[var(--text-primary)]">{item.val}</div>
-                    <div className="text-[9px] text-[var(--text-secondary)] uppercase font-bold tracking-tighter">{item.label}</div>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-[10px] text-center text-[var(--text-secondary)]">Your visibility starts with your registry.</p>
-            </div>
+            {/* Quote box (moved from below form) */}
+            <QuoteCarousel />
 
             {/* Profile Card Overlay (Removed as duplicated/confusing with story box) */}
             <div className="hidden absolute bottom-8 left-8 right-8 bg-[var(--bg-primary)]/90 backdrop-blur-xl rounded-2xl p-5 border border-white/10">

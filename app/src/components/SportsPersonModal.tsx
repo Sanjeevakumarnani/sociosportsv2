@@ -8,19 +8,12 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { useGoogleLogin } from '@react-oauth/google';
 
 interface SportsPersonModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultIdentity?: Identity;
 }
-
-const sports = [
-  'Cricket', 'Football', 'Badminton', 'Basketball', 'Athletics',
-  'Tennis', 'Hockey', 'Kabaddi', 'Swimming', 'Boxing',
-  'Wrestling', 'Table Tennis', 'Volleyball', 'Archery', 'Other'
-];
 
 type RegistrationStep = 'METHOD' | 'PHONE' | 'OTP' | 'EMAIL_REG' | 'PASSWORD' | 'IDENTITY' | 'DETAILS' | 'PROFILE' | 'WELCOME';
 type Identity = 'GENERAL' | 'TRAINER' | 'ATHLETE' | null;
@@ -30,13 +23,14 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
   const fileInputRef = useRef<HTMLInputElement>(null);
   useFocusTrap(modalRef, isOpen, onClose);
 
-  const [step, setStep] = useState<RegistrationStep>('METHOD');
+  const [step, setStep] = useState<RegistrationStep>('PHONE');
   const [identity, setIdentity] = useState<Identity>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [uploadedImageResponse, setUploadedImageResponse] = useState<any>(null);
   const [sportsId, setSportsId] = useState('');
-  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [userExistsInModal, setUserExistsInModal] = useState('');
 
   const [formData, setFormData] = useState({
     phone: '',
@@ -57,11 +51,12 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
       phone: '', otp: '', fullName: '', email: '',
       password: '', profession: '', location: '', sport: '', experience: ''
     });
-    setStep('METHOD');
+    setStep('PHONE');
     setIdentity(null);
     setProfileImage(null);
-    setGoogleAccessToken(null);
+    setUploadedImageResponse(null);
     setPasswordErrors([]);
+    setUserExistsInModal('');
     onClose();
   };
 
@@ -96,14 +91,16 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const phoneDigits = (formData.phone || '').replace(/\D/g, '').trim();
+
   const handleSendOTP = async () => {
-    if (!formData.phone || formData.phone.length < 10) {
-      toast.error('Please enter a valid phone number');
+    if (!phoneDigits || phoneDigits.length < 10) {
+      toast.error('Please enter a valid 10-digit phone number');
       return;
     }
     setIsLoading(true);
     try {
-      await api.otp.sendPhone(formData.phone, 'athlete_identity');
+      await api.userLogin(phoneDigits);
       toast.success('Code sent! Please check your phone.');
       setStep('OTP');
     } catch (error: any) {
@@ -113,44 +110,6 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
     }
   };
 
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      try {
-        // Fetch user info from Google
-        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-        const googleUser = await res.json();
-
-        // Store the access token so we can use it in handleFinish
-        setGoogleAccessToken(tokenResponse.access_token);
-
-        // Login to our backend with Google access token
-        const response = await api.googleAuth({ access_token: tokenResponse.access_token });
-        if (response.token) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('user', JSON.stringify(response.user));
-        }
-
-        // Prefill email/name and move to IDENTITY step (skip PASSWORD for Google users)
-        setFormData(prev => ({
-          ...prev,
-          email: googleUser.email,
-          fullName: googleUser.name,
-        }));
-        setProfileImage(googleUser.picture);
-        setStep('IDENTITY');
-        toast.success(`Welcome ${googleUser.name}! Please choose your identity.`);
-      } catch (error) {
-        toast.error('Google login failed');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    onError: () => toast.error('Google Login Failed'),
-  });
-
   const handleVerifyOTP = async () => {
     if (formData.otp.length < 6) {
       toast.error('Please enter the 6-digit code');
@@ -158,14 +117,15 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
     }
     setIsLoading(true);
     try {
-      const res = await api.otp.verify(formData.phone, formData.otp, 'athlete_identity', 'phone');
-      if (res.success) {
-        setStep('PASSWORD');
-      } else {
-        toast.error('Invalid or expired code');
+      const res = await api.userLoginWithOtp(phoneDigits, formData.otp);
+      if (res?.token) {
+        setUserExistsInModal('User already exists. Use a different number.');
+        return;
       }
-    } catch (error) {
-      toast.error('Verification failed');
+      setUserExistsInModal('');
+      setStep('IDENTITY');
+    } catch (error: any) {
+      toast.error(error.message || 'Verification failed');
     } finally {
       setIsLoading(false);
     }
@@ -182,8 +142,9 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
 
     setIsLoading(true);
     try {
-      const res = await api.uploadProfile(file);
-      setProfileImage(res.url);
+      const res = await api.commonUpload(file, 'user');
+      setUploadedImageResponse(res);
+      setProfileImage(res?.Location ?? res?.url ?? res?.path ?? null);
       toast.success('Photo uploaded!');
     } catch (error) {
       toast.error('Upload failed');
@@ -211,21 +172,15 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
       // Register user account if password was provided
       if (formData.password) {
         try {
-          if (googleAccessToken) {
-            // User came via Google Login — token is already stored in localStorage
-            // No need to re-auth; token was set during loginWithGoogle
-          } else {
-            // Email or phone registration — create account
-            const response = await api.register({
-              email: formData.email,
-              password: formData.password,
-              name: formData.fullName,
-              role: identity as any
-            });
-            if (response.token) {
-              localStorage.setItem('token', response.token);
-              localStorage.setItem('user', JSON.stringify(response.user));
-            }
+          const response = await api.register({
+            email: formData.email,
+            password: formData.password,
+            name: formData.fullName,
+            role: identity as any
+          });
+          if (response.token) {
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('user', JSON.stringify(response.user));
           }
         } catch (regError: any) {
           // Non-blocking: if user already exists or registration fails, still proceed
@@ -233,24 +188,39 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
         }
       }
 
-      // Create the formal inquiry entry
-      await api.createInquiry({
-        name: formData.fullName,
+      // User/create with upload response in images array (same as Build your identity)
+      await api.userCreate({
+        first_name: formData.fullName,
+        phonenumber: phoneDigits,
         email: formData.email,
-        phone: formData.phone,
-        subject: `New ${identity} Registration`,
-        message: `Identity: ${identity} | Sport: ${formData.sport} | Location: ${formData.location} | ID: ${sportsId}`
+        dob: '2000-01-01',
+        user_type: identity === 'ATHLETE' ? 'Sportsman/Athlete' : identity === 'TRAINER' ? 'Trainer' : 'General',
+        professional_title: formData.profession || undefined,
+        images: uploadedImageResponse ? [uploadedImageResponse] : [],
       });
 
-      // Trigger the welcome/ID email
-      await api.finishRegistration({
-        email: formData.email,
-        name: formData.fullName,
-        sportsId,
-        role: identity as any
-      });
-
-      // Save public profile for search (non-blocking)
+      // Optional: only run if backend has these endpoints; do not block success
+      try {
+        await api.createInquiry({
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          subject: `New ${identity} Registration`,
+          message: `Identity: ${identity} | Profession: ${formData.profession} | Location: ${formData.location} | ID: ${sportsId}`
+        });
+      } catch (e) {
+        console.warn('createInquiry skipped:', (e as Error).message);
+      }
+      try {
+        await api.finishRegistration({
+          email: formData.email,
+          name: formData.fullName,
+          sportsId,
+          role: identity as any
+        });
+      } catch (e) {
+        console.warn('finishRegistration skipped:', (e as Error).message);
+      }
       try {
         await api.sportsProfiles.create({
           sportsId,
@@ -258,14 +228,13 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
           email: formData.email,
           phone: formData.phone || '',
           role: identity as any,
-          sport: identity === 'ATHLETE' ? formData.sport : undefined,
+          sport: undefined,
           profession: identity === 'TRAINER' ? formData.profession : undefined,
           location: formData.location,
           image: profileImage
         });
-      } catch (err) {
-        console.error('Failed to save public profile:', err);
-        // Don't block success flow if this fails, they still got the email
+      } catch (e) {
+        console.warn('sportsProfiles.create skipped:', (e as Error).message);
       }
 
       setStep('WELCOME');
@@ -282,10 +251,10 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
       phone: '', otp: '', fullName: '', email: '',
       password: '', profession: '', location: '', sport: '', experience: ''
     });
-    setStep('METHOD');
+    setStep('PHONE');
     setIdentity(null);
     setProfileImage(null);
-    setGoogleAccessToken(null);
+    setUploadedImageResponse(null);
     setPasswordErrors([]);
     handleClose();
   };
@@ -302,45 +271,16 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
           >
             <div className="text-center mb-8">
               <h2 className="text-3xl font-black text-white mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Join the Movement</h2>
-              <p className="text-[var(--text-secondary)]">Choose your preferred registration method</p>
+              <p className="text-[var(--text-secondary)]">Enter your mobile number to get started</p>
             </div>
 
-            <div className="grid gap-4">
-              <button
-                onClick={() => loginWithGoogle()}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-100 transition-all border border-white/10 disabled:opacity-50"
-              >
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                  <>
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-                    Continue with Google
-                  </>
-                )}
-              </button>
-
-              <div className="flex items-center gap-4 my-2">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-white/30 text-xs font-bold uppercase tracking-wider">or</span>
-                <div className="flex-1 h-px bg-white/10" />
-              </div>
-
-              <button
-                onClick={() => setStep('PHONE')}
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-all border border-white/10 group"
-              >
-                <Phone className="w-5 h-5 text-[var(--accent-orange)] group-hover:scale-110 transition-transform" />
-                Continue with Phone
-              </button>
-
-              <button
-                onClick={() => setStep('EMAIL_REG')}
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-all border border-white/10 group"
-              >
-                <Mail className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
-                Continue with Email
-              </button>
-            </div>
+            <button
+              onClick={() => setStep('PHONE')}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-all border border-white/10 group"
+            >
+              <Phone className="w-5 h-5 text-[var(--accent-orange)] group-hover:scale-110 transition-transform" />
+              Continue with Mobile (OTP)
+            </button>
           </motion.div>
         );
 
@@ -433,77 +373,39 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
           </motion.div>
         );
 
+      // --- PASSWORD step commented out: after OTP success go directly to IDENTITY ---
+      // case 'PASSWORD':
+      //   return (
+      //     <motion.div
+      //       initial={{ opacity: 0, x: 20 }}
+      //       animate={{ opacity: 1, x: 0 }}
+      //       exit={{ opacity: 0, x: -20 }}
+      //       className="space-y-6"
+      //     >
+      //       <div className="text-center mb-8">
+      //         <h2 className="text-2xl font-black text-white mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Set Your Password</h2>
+      //         <p className="text-[var(--text-secondary)]">Create a secure password for your SocioSports ID</p>
+      //       </div>
+      //       <div>
+      //         <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1 mb-1.5 block">Password</label>
+      //         <input
+      //           type="password"
+      //           name="password"
+      //           value={formData.password}
+      //           onChange={(e) => {
+      //             handleChange(e);
+      //             setPasswordErrors(validatePassword(e.target.value));
+      //           }}
+      //           placeholder="••••••••"
+      //           className={...}
+      //         />
+      //         <div className="mt-3 space-y-1.5"> ... password requirements ... </div>
+      //       </div>
+      //       <button onClick={() => { validatePassword; setStep('IDENTITY'); }}>Set & Continue</button>
+      //     </motion.div>
+      //   );
       case 'PASSWORD':
-        return (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-black text-white mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Set Your Password</h2>
-              <p className="text-[var(--text-secondary)]">Create a secure password for your SocioSports ID</p>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1 mb-1.5 block">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={(e) => {
-                  handleChange(e);
-                  setPasswordErrors(validatePassword(e.target.value));
-                }}
-                placeholder="••••••••"
-                className={`w-full px-4 py-3.5 rounded-xl bg-white/5 border text-white focus:outline-none transition-all ${formData.password && passwordErrors.length === 0
-                  ? 'border-green-500/60 focus:border-green-400'
-                  : formData.password && passwordErrors.length > 0
-                    ? 'border-red-500/60 focus:border-red-400'
-                    : 'border-white/10 focus:border-[var(--accent-orange)]'
-                  }`}
-              />
-              {/* Password requirements checklist */}
-              <div className="mt-3 space-y-1.5">
-                {[
-                  { label: 'At least 8 characters', test: formData.password.length >= 8 },
-                  { label: 'One uppercase letter (A-Z)', test: /[A-Z]/.test(formData.password) },
-                  { label: 'One number (0-9)', test: /[0-9]/.test(formData.password) },
-                  { label: 'One special character (!@#$%...)', test: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password) },
-                ].map((req, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${!formData.password ? 'bg-white/10' : req.test ? 'bg-green-500' : 'bg-red-500/60'
-                      }`}>
-                      {req.test && formData.password && <CheckCircle className="w-3 h-3 text-white" />}
-                    </div>
-                    <span className={`text-xs transition-colors ${!formData.password ? 'text-white/30' : req.test ? 'text-green-400' : 'text-red-400'
-                      }`}>{req.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                if (!formData.password) {
-                  toast.error('Please set a password');
-                  return;
-                }
-                const errors = validatePassword(formData.password);
-                if (errors.length > 0) {
-                  toast.error('Password must have: ' + errors.join(', '));
-                  return;
-                }
-                setPasswordErrors([]);
-                setStep('IDENTITY');
-              }}
-              className="w-full btn-primary py-4 text-lg font-bold"
-            >
-              Set & Continue
-            </button>
-          </motion.div>
-        );
+        return null; // password step disabled; after OTP we go to IDENTITY
 
       case 'PHONE':
         return (
@@ -525,8 +427,13 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
                 type="tel"
                 name="phone"
                 value={formData.phone}
-                onChange={handleChange}
+                maxLength={10}
+                inputMode="numeric"
                 placeholder="Phone Number"
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setFormData(prev => ({ ...prev, phone: digitsOnly }));
+                }}
                 className="w-full pl-24 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white text-lg focus:outline-none focus:border-[var(--accent-orange)] transition-all"
               />
             </div>
@@ -548,9 +455,17 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            <button onClick={() => setStep('PHONE')} className="flex items-center gap-1 text-[var(--accent-orange)] text-sm font-medium mb-4">
+            <button
+              onClick={() => { setStep('PHONE'); setUserExistsInModal(''); }}
+              className="flex items-center gap-1 text-[var(--accent-orange)] text-sm font-medium mb-4"
+            >
               <ArrowLeft className="w-4 h-4" /> Change Number
             </button>
+            {userExistsInModal && (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+                <p className="text-amber-200 text-sm font-medium">{userExistsInModal}</p>
+              </div>
+            )}
             <div className="text-center mb-8">
               <h2 className="text-2xl font-black text-white mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Verify OTP</h2>
               <p className="text-[var(--text-secondary)]">Enter the code sent to {formData.phone}</p>
@@ -598,14 +513,6 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
             </div>
             <div className="grid gap-4">
               {[
-                {
-                  id: 'GENERAL',
-                  label: 'General Citizen',
-                  icon: User,
-                  desc: 'Follow sports and join communities',
-                  gradient: 'from-blue-500/20 to-cyan-500/20',
-                  accent: 'blue'
-                },
                 {
                   id: 'ATHLETE',
                   label: 'Sportsman / Athlete',
@@ -668,7 +575,7 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
           >
             <div className="text-center mb-4">
               <h2 className="text-2xl font-black text-white mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                {identity === 'TRAINER' ? 'Trainer Registration' : 'Basic Details'}
+                Basic Details
               </h2>
               <p className="text-[var(--text-secondary)]">A few more things to set up your profile</p>
             </div>
@@ -698,36 +605,17 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
                 />
               </div>
 
-              {identity === 'TRAINER' ? (
-                <div>
-                  <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1 mb-1.5 block">Profession Title</label>
-                  <input
-                    type="text"
-                    name="profession"
-                    value={formData.profession}
-                    onChange={handleChange}
-                    placeholder="e.g. Senior Cricket Coach"
-                    className="w-full px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white focus:border-[var(--accent-orange)] focus:outline-none transition-all"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1 mb-1.5 block">Interests / Sports</label>
-                  <div className="relative">
-                    <select
-                      name="sport"
-                      value={formData.sport}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3.5 rounded-xl border border-white/10 text-white focus:border-[var(--accent-orange)] focus:outline-none appearance-none cursor-pointer bg-white/5"
-                      style={{ backgroundColor: '#1a1a2e' }}
-                    >
-                      <option value="" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>Select a sport</option>
-                      {sports.map(s => <option key={s} value={s} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{s}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50 pointer-events-none" />
-                  </div>
-                </div>
-              )}
+              <div>
+                <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1 mb-1.5 block">Profession</label>
+                <input
+                  type="text"
+                  name="profession"
+                  value={formData.profession}
+                  onChange={handleChange}
+                  placeholder="e.g. Athlete, Coach, Sports Enthusiast"
+                  className="w-full px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white focus:border-[var(--accent-orange)] focus:outline-none transition-all"
+                />
+              </div>
 
               <div>
                 <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1 mb-1.5 block">Location</label>
@@ -983,7 +871,7 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-lg rounded-[2.5rem] overflow-hidden"
+        className="relative w-full max-w-lg max-h-[90vh] rounded-[2.5rem] overflow-hidden flex flex-col"
         style={{
           background: 'linear-gradient(135deg, rgba(20, 27, 42, 0.9) 0%, rgba(11, 15, 23, 0.95) 100%)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -995,12 +883,11 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
             className="h-full bg-gradient-to-r from-[var(--accent-orange)] to-green-500"
             initial={{ width: '0%' }}
             animate={{
-              width: step === 'METHOD' ? '12%' :
-                step === 'PHONE' || step === 'EMAIL_REG' ? '25%' :
-                  step === 'OTP' ? '37%' :
-                    step === 'IDENTITY' ? '50%' :
-                      step === 'DETAILS' ? '62%' :
-                        step === 'PROFILE' ? '75%' : '100%'
+              width: step === 'PHONE' ? '12%' :
+                step === 'OTP' ? '25%' :
+                  step === 'IDENTITY' ? '50%' :
+                    step === 'DETAILS' ? '62%' :
+                      step === 'PROFILE' ? '75%' : '100%'
             }}
           />
         </div>
@@ -1012,7 +899,7 @@ const SportsPersonModal: React.FC<SportsPersonModalProps> = ({ isOpen, onClose, 
           <X className="w-5 h-5 text-white/70" />
         </button>
 
-        <div className="px-8 py-10">
+        <div className="px-8 py-10 flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
             {renderStep()}
           </AnimatePresence>

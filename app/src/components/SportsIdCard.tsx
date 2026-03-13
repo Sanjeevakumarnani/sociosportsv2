@@ -10,7 +10,7 @@ interface SportsProfile {
     role: string;
     sport?: string;
     profession?: string;
-    location?: string;
+    city?: string;
     image?: string;
     email?: string;
     phone?: string;
@@ -25,6 +25,10 @@ interface SportsIdCardProps {
 const SportsIdCard: React.FC<SportsIdCardProps> = ({ profile, onBack, onShowResume }) => {
     const cardRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [imageError, setImageError] = useState(false);
+    const imageSrc = !imageError && profile.image
+        ? profile.image
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`;
 
     const handleDownload = async () => {
         if (!cardRef.current) return;
@@ -116,10 +120,10 @@ const SportsIdCard: React.FC<SportsIdCardProps> = ({ profile, onBack, onShowResu
                             <div className="w-32 h-32 rounded-3xl p-1 bg-gradient-to-br from-[var(--accent-orange)] to-purple-600 shadow-lg">
                                 <div className="w-full h-full rounded-[20px] overflow-hidden bg-[var(--bg-primary)]">
                                     <img
-                                        src={profile.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`}
+                                        src={imageSrc}
                                         alt={profile.name}
                                         className="w-full h-full object-cover"
-                                        crossOrigin="anonymous" // Essential for html2canvas
+                                        onError={() => setImageError(true)}
                                     />
                                 </div>
                             </div>
@@ -168,7 +172,7 @@ const SportsIdCard: React.FC<SportsIdCardProps> = ({ profile, onBack, onShowResu
                                     <p className="text-[9px] uppercase text-[var(--text-secondary)] tracking-widest mb-1 flex items-center gap-1">
                                         <MapPin className="w-3 h-3" /> Location
                                     </p>
-                                    <p className="text-sm font-bold truncate">{profile.location || '-'}</p>
+                                    <p className="text-sm font-bold truncate">{profile.city || '-'}</p>
                                 </div>
                             </div>
                         </div>

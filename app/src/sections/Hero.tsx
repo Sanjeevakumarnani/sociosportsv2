@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, Users, Calendar, Trophy, User, ChevronLeft, ChevronRight, Award, Compass, Truck } from 'lucide-react';
+import { ArrowRight, Users, Calendar, Trophy, User, ChevronLeft, ChevronRight, Award, Compass, Truck, Search } from 'lucide-react';
 import SportsPersonModal from '../components/SportsPersonModal';
+import SearchModal from '../components/SearchModal';
 import { useTheme } from '../contexts/ThemeContext';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -28,8 +29,8 @@ const Hero = () => {
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
 
-  // Registration modal state
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Hero images auto-scroll state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -133,14 +134,15 @@ const Hero = () => {
       link: '/sports-on-wheels',
       cta: 'Book Mobile Event',
     },
-    {
-      title: 'Sports Career Hub',
-      description: 'Explore sports industry jobs, internships, and professional opportunities.',
-      image: '/images/jobs_feature.jpg',
-      icon: Users,
-      link: '/jobs',
-      cta: 'View Openings',
-    },
+    // Jobs page hidden
+    // {
+    //   title: 'Sports Career Hub',
+    //   description: 'Explore sports industry jobs, internships, and professional opportunities.',
+    //   image: '/images/jobs_feature.jpg',
+    //   icon: Users,
+    //   link: '/jobs',
+    //   cta: 'View Openings',
+    // },
   ]);
 
   // CMS Data Fetching
@@ -438,8 +440,8 @@ const Hero = () => {
                   </h1>
                 </div>
 
-                {/* Subheadline */}
-                <div ref={subheadlineRef} className="mb-8">
+              {/* Subheadline */}
+              <div ref={subheadlineRef} className="mb-8">
                   <p className="text-lg md:text-xl max-w-xl leading-relaxed font-medium" style={{ color: 'var(--text-secondary)' }}>
                     Connect athletes, coaches, academies, and communities in one platform.
                   </p>
@@ -449,7 +451,7 @@ const Hero = () => {
                 <div ref={ctaRef} className="flex flex-wrap gap-5 mb-4">
                   <button
                     onClick={() => setIsRegistrationOpen(true)}
-                    aria-label="Join SocioSports – Registration Form"
+                    aria-label="Join SocioSports – Registration"
                     className="hero-cta btn-primary gap-3 text-base px-10 py-4 animate-pulse-glow"
                   >
                     <User className="w-5 h-5" />
@@ -586,10 +588,13 @@ const Hero = () => {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--bg-primary)] to-transparent z-20" />
       </section>
 
-      {/* Sports Person Registration Modal */}
       <SportsPersonModal
         isOpen={isRegistrationOpen}
         onClose={() => setIsRegistrationOpen(false)}
+      />
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
       />
     </>
   );

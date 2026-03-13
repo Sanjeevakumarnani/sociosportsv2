@@ -17,9 +17,10 @@ interface SportsProfile {
     sportsId: string;
     name: string;
     role: string;
+    userId?: number | string;
     sport?: string;
     profession?: string;
-    location?: string;
+    city?: string;
     image?: string;
     email?: string;
     phone?: string;
@@ -78,8 +79,68 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         setHasSearched(true);
         setSelectedProfile(null);
         try {
-            const data = await api.sportsProfiles.search(query);
-            setResults(data);
+            const response = await api.sportsProfiles.search(query);
+            const rows = response.rows ?? [];
+
+            const mapped: SportsProfile[] = rows.map((item: any) => {
+                const rawType = (item.user_type || '').toLowerCase();
+                const isAthlete =
+                    rawType.includes('sportsman') ||
+                    rawType.includes('athelete') ||
+                    rawType.includes('athlete');
+
+                const firstName = item.first_name || '';
+                const lastName = item.last_name || '';
+                const fullName = `${firstName} ${lastName}`.trim() || 'New Member';
+
+                // If there is no member_id or it's null/empty, show 'N/A'
+                const sportsId =
+                    (item.member_id && String(item.member_id).trim()) ||
+                    'N/A';
+
+                // Try to pick primary image from photos / cover_photos
+                let image: string | undefined;
+                if (Array.isArray(item.photos) && item.photos.length > 0) {
+                    const firstPhoto = item.photos[0];
+                    if (typeof firstPhoto === 'string') {
+                        image = firstPhoto;
+                    } else if (firstPhoto && typeof firstPhoto === 'object') {
+                        image =
+                            firstPhoto.Location ||
+                            firstPhoto.url ||
+                            firstPhoto.path ||
+                            firstPhoto.src;
+                    }
+                } else if (Array.isArray(item.cover_photos) && item.cover_photos.length > 0) {
+                    const firstCover = item.cover_photos[0];
+                    if (typeof firstCover === 'string') {
+                        image = firstCover;
+                    } else if (firstCover && typeof firstCover === 'object') {
+                        image =
+                            firstCover.Location ||
+                            firstCover.url ||
+                            firstCover.path ||
+                            firstCover.src;
+                    }
+                }
+
+                return {
+                    id: String(item.id ?? sportsId),
+                    sportsId,
+                    name: fullName,
+                    role: isAthlete ? 'ATHLETE' : 'TRAINER',
+                    userId: item.id,
+                    sport: item.professional_title || (isAthlete ? 'Athlete' : 'Coach'),
+                    profession: !isAthlete ? (item.professional_title || 'Coach') : undefined,
+                    city: item.city || 'India',
+                    image,
+                    bio: item.technical_overview || undefined,
+                    email: item.email ?? item.email_id ?? item.user_email ?? undefined,
+                    phone: item.phone ?? item.mobile ?? item.phone_number ?? undefined,
+                };
+            });
+
+            setResults(mapped);
         } catch (error) {
             console.error(error);
             toast.error('Failed to search');
@@ -149,7 +210,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                                     type="text"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="Search by Name or Sports ID (e.g. AT123456, CO123456)"
+                                    placeholder="Search by Name or Sports ID (e.g. STA00000, STA00001)"
                                     className="w-full pl-6 pr-32 py-4 rounded-2xl bg-[var(--bg-secondary)] border border-white/10 text-white text-lg focus:outline-none focus:border-[var(--accent-orange)] transition-all shadow-inner"
                                 />
                                 <button
@@ -203,10 +264,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                                                                 <span className="truncate">{profile.sport || profile.profession}</span>
                                                             </div>
                                                         )}
-                                                        {profile.location && (
+                                                        {profile.city && (
                                                             <div className="flex items-center gap-2">
                                                                 <MapPin className="w-3 h-3" />
-                                                                <span className="truncate">{profile.location}</span>
+                                                                <span className="truncate">{profile.city}</span>
                                                             </div>
                                                         )}
                                                     </div>

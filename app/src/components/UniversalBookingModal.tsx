@@ -156,18 +156,27 @@ const UniversalBookingModal: React.FC<UniversalBookingModalProps> = ({ isOpen, o
                     requirements = `Service: ${initialData?.title} | Contact: ${formData.name}`;
                 }
 
-                const bookingData = {
-                    businessName,
-                    stallType: type, // Using stallType field for Category
-                    requirements,
-                    contactPerson: formData.name,
-                    phone: formData.phone,
-                    email: formData.email,
-                    eventId: (initialData?.id && initialData.id.length > 10) ? initialData.id : undefined // Only send ID if it seems to be a valid UUID (backend events)
-                };
-
-                // Call API (using existing createBooking)
-                await api.createBooking(bookingData);
+                if (mode === 'SERVICE') {
+                    await api.submitEventBooking({
+                        request_type: 'event_booking',
+                        organization_name: (businessName || formData.name).trim(),
+                        event_type: initialData?.title || formData.serviceType || 'Service',
+                        email: formData.email.trim(),
+                        phone_number: formData.phone?.trim() || '',
+                        description: requirements,
+                    });
+                } else {
+                    const bookingData = {
+                        businessName,
+                        stallType: type,
+                        requirements,
+                        contactPerson: formData.name,
+                        phone: formData.phone,
+                        email: formData.email,
+                        eventId: (initialData?.id && initialData.id.length > 10) ? initialData.id : undefined
+                    };
+                    await api.createBooking(bookingData);
+                }
 
                 trackEvent(`submit_${mode.toLowerCase()}_booking`, {
                     category: type,

@@ -21,9 +21,10 @@ interface SportsProfile {
     sportsId: string;
     name: string;
     role: string;
+    userId?: number | string;
     sport?: string;
     profession?: string;
-    location?: string;
+    city?: string;
     image?: string;
     email?: string;
     phone?: string;
@@ -55,20 +56,122 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
     const [isExporting, setIsExporting] = useState(false);
     const [profile, setProfile] = useState<SportsProfile>(initialProfile);
     const [loading, setLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
+    const imageSrc = !imageError && profile.image
+        ? profile.image
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=0D8ABC&color=fff&size=512`;
 
     useEffect(() => {
         const fetchFullProfile = async () => {
             try {
-                const fullProfile = await api.sportsProfiles.getById(initialProfile.sportsId);
-                setProfile(fullProfile);
+                const fullProfile = await api.sportsProfiles.getById(initialProfile.sportsId) as any;
+                // Resolve image: full profile may have image, or photos[0].Location (S3), or fall back to search result
+                let image = fullProfile?.image;
+                if (!image && Array.isArray(fullProfile?.photos) && fullProfile.photos.length > 0) {
+                    const first = fullProfile.photos[0];
+                    image = typeof first === 'string' ? first : (first?.Location || first?.url || first?.path);
+                }
+                if (!image || typeof image !== 'string') image = initialProfile?.image;
+
+                const userId =
+                    (initialProfile as any)?.userId ??
+                    (fullProfile as any)?.user_id ??
+                    (fullProfile as any)?.userId ??
+                    (fullProfile as any)?.User?.id;
+
+                // Email: full profile may use email, email_id, user_email; fallback to search result
+                const email =
+                    (fullProfile as any)?.email ??
+                    (fullProfile as any)?.email_id ??
+                    (fullProfile as any)?.user_email ??
+                    initialProfile?.email;
+
+                const phone =
+                    (fullProfile as any)?.phone ??
+                    (fullProfile as any)?.mobile ??
+                    (fullProfile as any)?.phone_number ??
+                    initialProfile?.phone;
+
+                const city =
+                    (fullProfile as any)?.city ??
+                    (fullProfile as any)?.location ??
+                    initialProfile?.city;
+
+                // Prefer card (search result) contact details; fullProfile fills in deeper data
+                setProfile({
+                    ...fullProfile,
+                    ...initialProfile,
+                    image: image || initialProfile?.image,
+                    email: email || initialProfile?.email,
+                    phone: phone || initialProfile?.phone,
+                    city: city || initialProfile?.city,
+                    ...(userId ? { userId } : {}),
+                });
             } catch {
                 console.warn('Could not fetch full profile, using search result data');
+                setProfile(initialProfile);
             } finally {
                 setLoading(false);
             }
         };
         fetchFullProfile();
     }, [initialProfile.sportsId]);
+
+    // After we know userId, load professional history & education from backend (no auth required)
+    useEffect(() => {
+        const loadHistory = async () => {
+            const anyProfile: any = profile;
+            const userId = anyProfile?.userId;
+            if (!userId) return;
+
+            try {
+                const [proRes, eduRes] = await Promise.all([
+                    api.getProfessionalHistory(userId),
+                    api.getEducationHistory(userId),
+                ]);
+
+                const proRows = Array.isArray((proRes as any)?.rows) ? (proRes as any).rows : (Array.isArray(proRes) ? proRes : []);
+                const eduRows = Array.isArray((eduRes as any)?.rows) ? (eduRes as any).rows : (Array.isArray(eduRes) ? eduRes : []);
+
+                const mappedExperience = proRows.map((item: any) => ({
+                    organization: item.organization_name,
+                    academy: item.organization_name,
+                    location: item.location || item.place || '',
+                    year: item.start_date
+                        ? `${item.start_date}${item.end_date ? ` - ${item.end_date}` : ' - Present'}`
+                        : '',
+                    title: item.role_and_sports || item.achievements_or_summary || 'Professional Role',
+                    result: item.achievements_or_summary || '',
+                    coach: item.coach_name || item.coach_info?.fullname || '',
+                }));
+
+                const mappedEducation = eduRows.map((item: any) => ({
+                    academy: item.school_or_university || item.MasterDegree?.degree || '',
+                    location: item.MasterSpecialization?.specialization || '',
+                    period: item.Startdate
+                        ? `${item.Startdate}${item.enddate ? ` - ${item.enddate}` : item.currently_studying ? ' - Present' : ''}`
+                        : '',
+                    name: item.MasterDegree?.degree || item.school_or_university || 'Education',
+                    coach: '', // not applicable here
+                }));
+
+                setProfile(prev => ({
+                    ...prev,
+                    // For athletes, achievements = work experience, trainingHistory = education
+                    achievements: JSON.stringify(mappedExperience),
+                    trainingHistory: JSON.stringify(mappedEducation),
+                }));
+            } catch (err) {
+                console.error('Failed to load professional / education history', err);
+            }
+        };
+
+        loadHistory();
+    }, [profile.userId]);
+
+    useEffect(() => {
+        setImageError(false);
+    }, [profile.image]);
 
     // Parse JSON fields with fallbacks
     const achievements = profile.achievements ? JSON.parse(profile.achievements) : [];
@@ -211,12 +314,8 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
             doc.setTextColor(80, 80, 80);
             let contactY = 30;
 
-            if (profile.location) {
-                doc.text(profile.location, contactX, contactY, { align: 'right' });
-                contactY += 6;
-            }
-            if (profile.phone) {
-                doc.text(profile.phone, contactX, contactY, { align: 'right' });
+            if (profile.city) {
+                doc.text(profile.city, contactX, contactY, { align: 'right' });
                 contactY += 6;
             }
             if (profile.email) {
@@ -427,9 +526,10 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
                         <div className="flex justify-center">
                             <div className="w-40 h-40 rounded-full border-4 border-white/20 overflow-hidden bg-gray-800 shadow-xl">
                                 <img
-                                    src={profile.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=0D8ABC&color=fff&size=512`}
+                                    src={imageSrc}
                                     alt={profile.name}
                                     className="w-full h-full object-cover"
+                                    onError={() => setImageError(true)}
                                 />
                             </div>
                         </div>
@@ -516,63 +616,93 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
                                 </p>
                             </div>
                             <div className="text-right space-y-2 text-gray-500 mt-2">
-                                <div className="flex items-center justify-end gap-2 text-sm font-medium">
-                                    {profile.location} <MapPin className="w-4 h-4 text-gray-400" />
-                                </div>
-                                <div className="flex items-center justify-end gap-2 text-sm font-medium">
-                                    {profile.phone} <Phone className="w-4 h-4 text-gray-400" />
-                                </div>
-                                <div className="flex items-center justify-end gap-2 text-sm font-medium">
-                                    {profile.email} <Mail className="w-4 h-4 text-gray-400" />
-                                </div>
+                                {profile.city && (
+                                    <div className="flex items-center justify-end gap-2 text-sm font-medium">
+                                        {profile.city} <MapPin className="w-4 h-4 text-gray-400" />
+                                    </div>
+                                )}
+                                {profile.email && (
+                                    <div className="flex items-center justify-end gap-2 text-sm font-medium">
+                                        <a href={`mailto:${profile.email}`} className="text-[#0D8ABC] hover:underline truncate max-w-[280px]" title={profile.email}>
+                                            {profile.email}
+                                        </a>
+                                        <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+                                    </div>
+                                )}
+                                {profile.phone && (
+                                    <div className="flex items-center justify-end gap-2 text-sm font-medium">
+                                        <a href={`tel:${profile.phone}`} className="text-[#0D8ABC] hover:underline" title={profile.phone}>
+                                            {profile.phone}
+                                        </a>
+                                        <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Experience Timeline */}
-                        <section>
-                            <h2 className="text-lg font-black uppercase tracking-[0.4em] text-[#333] border-b-2 border-gray-100 pb-3 mb-8">Work Experience</h2>
-                            <div className="space-y-12">
-                                {(profile.role === 'ATHLETE' ? achievements : trainingHistory).map((exp: any, idx: number) => (
-                                    <div key={idx} className="flex gap-8 group">
-                                        <div className="w-48 pt-1">
-                                            <p className="text-xs font-black uppercase text-[#333]">{exp.organization || exp.academy}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">{exp.location}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 mt-0.5">{exp.year || exp.period}</p>
-                                        </div>
-                                        <div className="relative flex flex-col gap-2 flex-1 pl-8 border-l border-gray-200">
-                                            <div className="absolute top-2 -left-[5px] w-2.5 h-2.5 rounded-full bg-[#3D3D3D] border-2 border-white" />
-                                            <h4 className="text-base font-black text-[#333] uppercase leading-none">{exp.title || 'Professional Sports Role'}</h4>
-                                            <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                                                {exp.result ? exp.result : (exp.coach ? `Successfully completed intensive training under the guidance of Head Coach ${exp.coach}.` : 'Demonstrated exceptional performance and commitment to sports excellence.')}
-                                            </p>
-                                        </div>
+                        {(() => {
+                            const fullExperience: any[] = profile.role === 'ATHLETE' ? achievements : trainingHistory;
+                            const topThree = fullExperience.slice(0, 3);
+
+                            if (!topThree.length) return null;
+
+                            return (
+                                <section>
+                                    <h2 className="text-lg font-black uppercase tracking-[0.4em] text-[#333] border-b-2 border-gray-100 pb-3 mb-8">Work Experience</h2>
+                                    <div className="space-y-12">
+                                        {topThree.map((exp: any, idx: number) => (
+                                            <div key={idx} className="flex gap-8 group">
+                                                <div className="w-48 pt-1">
+                                                    <p className="text-xs font-black uppercase text-[#333]">{exp.organization || exp.academy}</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">{exp.location}</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 mt-0.5">{exp.year || exp.period}</p>
+                                                </div>
+                                                <div className="relative flex flex-col gap-2 flex-1 pl-8 border-l border-gray-200">
+                                                    <div className="absolute top-2 -left-[5px] w-2.5 h-2.5 rounded-full bg-[#3D3D3D] border-2 border-white" />
+                                                    <h4 className="text-base font-black text-[#333] uppercase leading-none">{exp.title || 'Professional Sports Role'}</h4>
+                                                    <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                                                        {exp.result ? exp.result : (exp.coach ? `Successfully completed intensive training under the guidance of Head Coach ${exp.coach}.` : 'Demonstrated exceptional performance and commitment to sports excellence.')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        </section>
+                                </section>
+                            );
+                        })()}
 
                         {/* Education Timeline */}
-                        <section>
-                            <h2 className="text-lg font-black uppercase tracking-[0.4em] text-[#333] border-b-2 border-gray-100 pb-3 mb-8">Education / Training</h2>
-                            <div className="space-y-12">
-                                {(profile.role === 'ATHLETE' ? trainingHistory : certifications).map((edu: any, idx: number) => (
-                                    <div key={idx} className="flex gap-8 group">
-                                        <div className="w-48 pt-1">
-                                            <p className="text-xs font-black uppercase text-[#333]">{edu.academy || edu.issuer}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">{edu.location || 'Official Certification'}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 mt-0.5">{edu.period || edu.year}</p>
-                                        </div>
-                                        <div className="relative flex flex-col gap-2 flex-1 pl-8 border-l border-gray-200">
-                                            <div className="absolute top-2 -left-[5px] w-2.5 h-2.5 rounded-full bg-[#3D3D3D] border-2 border-white" />
-                                            <h4 className="text-base font-black text-[#333] uppercase leading-none">{edu.name || 'Sports Certification / Fellowship'}</h4>
-                                            <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                                                {edu.coach ? `Completed fellowship under ${edu.coach}.` : 'Successfully attained professional standard for the discipline.'}
-                                            </p>
-                                        </div>
+                        {(() => {
+                            const fullEducation: any[] = profile.role === 'ATHLETE' ? trainingHistory : certifications;
+                            const topThreeEdu = fullEducation.slice(0, 3);
+
+                            if (!topThreeEdu.length) return null;
+
+                            return (
+                                <section>
+                                    <h2 className="text-lg font-black uppercase tracking-[0.4em] text-[#333] border-b-2 border-gray-100 pb-3 mb-8">Education / Training</h2>
+                                    <div className="space-y-12">
+                                        {topThreeEdu.map((edu: any, idx: number) => (
+                                            <div key={idx} className="flex gap-8 group">
+                                                <div className="w-48 pt-1">
+                                                    <p className="text-xs font-black uppercase text-[#333]">{edu.academy || edu.issuer}</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">{edu.location || 'Official Certification'}</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 mt-0.5">{edu.period || edu.year}</p>
+                                                </div>
+                                                <div className="relative flex flex-col gap-2 flex-1 pl-8 border-l border-gray-200">
+                                                    <div className="absolute top-2 -left-[5px] w-2.5 h-2.5 rounded-full bg-[#3D3D3D] border-2 border-white" />
+                                                    <h4 className="text-base font-black text-[#333] uppercase leading-none">{edu.name || 'Sports Certification / Fellowship'}</h4>
+                                                    <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                                                        {edu.coach ? `Completed fellowship under ${edu.coach}.` : 'Successfully attained professional standard for the discipline.'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        </section>
+                                </section>
+                            );
+                        })()}
 
                         {/* Skills Grid */}
                         {skills.length > 0 && (
@@ -619,15 +749,18 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
                 </div>
             </div>
 
-            {/* Official Footer Sticker */}
-            <div className="bg-[#FF4D2E] p-3 flex items-center justify-between text-white shrink-0">
-                <div className="flex items-center gap-6">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em]">Official Sports ID: {profile.sportsId}</span>
-                    <span className="text-[10px] font-medium opacity-80 italic">Verified by SocioSports Ecosystem</span>
+            {/* Official Footer Sticker - always visible, no clipping */}
+            <div className="bg-[#FF4D2E] px-6 py-4 flex items-center justify-between gap-4 text-white shrink-0 min-h-[72px]">
+                <div className="flex items-center gap-6 flex-shrink-0">
+                    <span className="text-xs font-black uppercase tracking-[0.2em] whitespace-nowrap">Official Sports ID: {profile.sportsId}</span>
+                    <span className="text-xs font-medium opacity-90 italic hidden sm:inline">Verified by SocioSports Ecosystem</span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Star className="w-3 h-3" />
-                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">Sports Authority of India Registered</span>
+                <div className="flex items-center gap-2 text-right flex-shrink-0">
+                    <Star className="w-4 h-4 shrink-0" />
+                    <div className="flex flex-col justify-center leading-tight">
+                        <span className="text-xs font-black uppercase tracking-wider">Sports Authority of India Registered</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-95">Key to Success of Indian Sports</span>
+                    </div>
                 </div>
             </div>
         </div>

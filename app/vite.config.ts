@@ -5,6 +5,7 @@ import { defineConfig } from "vite"
 // https://vite.dev/config/
 export default defineConfig({
   base: './',
+  envPrefix: ['VITE_', 'API_'],
   plugins: [react()],
   resolve: {
     alias: {
@@ -12,6 +13,8 @@ export default defineConfig({
     },
   },
   server: {
+    host: true,
+    allowedHosts: ['.trycloudflare.com'],
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -19,4 +22,4 @@ export default defineConfig({
       },
     },
   },
-});
+})

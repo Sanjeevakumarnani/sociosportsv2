@@ -19,6 +19,7 @@ const EcosystemPage = lazy(() => import('./pages/EcosystemPage'));
 const EventsPage = lazy(() => import('./pages/EventsPage'));
 const CommunityPage = lazy(() => import('./pages/CommunityPage'));
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
+const EventCertificatesPage = lazy(() => import('./pages/EventCertificatesPage'));
 const MobileAppPage = lazy(() => import('./pages/MobileAppPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const CareersPage = lazy(() => import('./pages/CareersPage'));
@@ -56,6 +57,7 @@ const InstitutionsAdmin = lazy(() => import('./pages/admin/InstitutionsAdmin'));
 const TrainersAdmin = lazy(() => import('./pages/admin/TrainersAdmin'));
 const TeamAdmin = lazy(() => import('./pages/admin/content/TeamAdmin'));
 const EmployerVerificationsAdmin = lazy(() => import('./pages/admin/EmployerVerificationsAdmin'));
+const VerifyCertificatePage = lazy(() => import('./pages/VerifyCertificatePage'));
 
 
 // Loading component
@@ -133,6 +135,7 @@ function App() {
                       <Route path="/blog" element={<ResourcesPage />} />
                       <Route path="/blog/:id" element={<BlogPostPage />} />
                       <Route path="/resources" element={<ResourcesPage />} />
+                      <Route path="/event-certificates" element={<EventCertificatesPage />} />
                       <Route path="/mobile-app" element={<MobileAppPage />} />
                       <Route path="/jobs" element={<JobsPage />} />
                       <Route path="/careers" element={<CareersPage />} />
@@ -146,6 +149,7 @@ function App() {
                       <Route path="/vendors" element={<Navigate to="/sports-on-wheels" replace />} />
                       <Route path="/institutions" element={<InstitutionsPage />} />
                       <Route path="/explore-sports" element={<ExploreSportsPage />} />
+                      <Route path="/verify-certificate/:certificateId" element={<VerifyCertificatePage />} />
 
                       {/* Public Admin Entry */}
                       <Route path="/admin" element={<AdminLogin />} />

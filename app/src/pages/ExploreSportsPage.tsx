@@ -257,7 +257,7 @@ const ExploreSportsPage = () => {
                             Join SocioSports to connect with athletes, coaches, and communities. Build your digital sports profile and never miss an opportunity.
                         </p>
                         <button
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate('/#athletes')}
                             className="btn-primary px-10 py-4 text-base font-bold"
                         >
                             Join SocioSports

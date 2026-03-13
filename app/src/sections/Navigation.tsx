@@ -24,7 +24,7 @@ const Navigation = () => {
     { label: 'Home', href: '/', icon: Home },
     { label: 'Sports on Wheels', href: '/sports-on-wheels', icon: Truck },
     { label: 'Sports Events', href: '/sports-events', icon: Calendar },
-    { label: 'Sports Jobs', href: '/jobs', icon: Briefcase },
+    // { label: 'Sports Jobs', href: '/jobs', icon: Briefcase }, // hidden
     { label: 'About', href: '/about', icon: Info },
   ];
 
@@ -98,7 +98,7 @@ const Navigation = () => {
           }`}
       >
         <div className="px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex items-center justify-between h-12 md:h-14">
+          <div className="flex items-center gap-4 min-h-[56px]">
             {/* Logo */}
             <Link
               to="/"
@@ -108,13 +108,13 @@ const Navigation = () => {
               <img
                 src="/images/logo.png"
                 alt="SocioSports Logo"
-                className={`h-10 w-auto object-contain transition-all duration-300 transform group-hover:scale-105 ${theme === 'light' ? 'brightness-0' : ''
+                className={`h-12 md:h-14 w-auto object-contain transition-all duration-300 transform group-hover:scale-105 ${theme === 'light' ? 'brightness-0' : ''
                   }`}
               />
             </Link>
 
-            {/* Responsive Navigation Pill */}
-            <div className={`hidden lg:flex items-center gap-0.5 p-1 rounded-full border backdrop-blur-md transition-all duration-500 ${isHomePage && !isScrolled
+            {/* Responsive Navigation Pill – height aligned with search bar */}
+            <div className={`hidden lg:flex items-center gap-1 p-1.5 rounded-full border backdrop-blur-md transition-all duration-500 ${isHomePage && !isScrolled
               ? theme === 'light'
                 ? 'bg-white/90 border-gray-200/50 shadow-sm'
                 : 'bg-black/50 border-white/10'
@@ -137,7 +137,7 @@ const Navigation = () => {
                         scrollToSection(link.href);
                       }
                     }}
-                    className={`flex items-center justify-center px-2.5 py-1 rounded-full transition-all duration-300 relative flex-shrink-0 font-medium text-xs whitespace-nowrap ${isActive
+                    className={`flex items-center justify-center px-3 py-2 rounded-full transition-all duration-300 relative flex-shrink-0 font-medium text-sm whitespace-nowrap ${isActive
                       ? 'bg-[var(--accent-orange)] text-white'
                       : isHomePage && !isScrolled
                         ? theme === 'light'
@@ -146,18 +146,18 @@ const Navigation = () => {
                         : 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'
                       }`}
                   >
-                    <link.icon className="w-3.5 h-3.5 mr-1.5" />
+                    <link.icon className="w-4 h-4 mr-1.5" />
                     {link.label}
                   </Link>
                 );
               })}
 
-              <div className="w-px h-4 bg-[var(--border)] mx-1 flex-shrink-0" />
+              <div className="w-px h-5 bg-[var(--border)] mx-1 flex-shrink-0" />
 
               <Link
                 to="/contact"
                 aria-label="Contact Us"
-                className={`flex items-center justify-center px-2.5 py-1 rounded-full transition-all duration-300 relative flex-shrink-0 font-medium text-xs whitespace-nowrap ${location.pathname === '/contact'
+                className={`flex items-center justify-center px-3 py-2 rounded-full transition-all duration-300 relative flex-shrink-0 font-medium text-sm whitespace-nowrap ${location.pathname === '/contact'
                   ? 'bg-[var(--accent-orange)] text-white'
                   : isHomePage && !isScrolled
                     ? theme === 'light'
@@ -166,33 +166,36 @@ const Navigation = () => {
                     : 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'
                   }`}
               >
-                <Phone className="w-3.5 h-3.5 mr-1.5" />
+                <Phone className="w-4 h-4 mr-1.5" />
                 Contact Us
               </Link>
             </div>
 
-            {/* Desktop Actions */}
-            <div className="hidden lg:flex items-center gap-3">
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent-orange)] hover:border-[var(--accent-orange)] transition-all transform hover:scale-105"
-                title="Search IDs & Profiles"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-
-              <Link
-                to="/mobile-app"
-                aria-label="Download the SocioSports Mobile App for iOS and Android"
-              >
+            {/* Desktop Search Bar in Nav (replaces icon + Get the app) */}
+            <div className="hidden lg:flex items-center ml-auto flex-1 max-w-xl">
+              <div className="w-full flex items-stretch rounded-2xl border border-[var(--accent-orange)]/70 bg-[var(--bg-secondary)]/95 backdrop-blur-xl shadow-2xl overflow-hidden min-h-[44px]">
+                {/* Fake input area – opens modal on click */}
                 <button
-                  className="btn-primary gap-2 px-6 py-2 flex items-center relative overflow-hidden group"
-                  aria-label="Download App"
+                  type="button"
+                  onClick={() => setIsSearchOpen(true)}
+                  className="flex-1 flex items-center gap-2 px-4 py-2.5 min-h-[44px] text-left"
+                  aria-label="Search sports person by name or USID"
                 >
-                  <Download className="w-4 h-4 text-white" aria-hidden="true" />
-                  <span className="text-white font-semibold relative z-10">Get the app</span>
+                  <Search className="w-4 h-4 text-[var(--accent-orange)] flex-shrink-0" />
+                  <span className="text-xs sm:text-sm text-[var(--text-secondary)] truncate">
+                    Search by name or USID
+                  </span>
                 </button>
-              </Link>
+
+                {/* Right Search button */}
+                <button
+                  type="button"
+                  onClick={() => setIsSearchOpen(true)}
+                  className="px-4 min-h-[44px] text-xs sm:text-sm font-semibold bg-[var(--accent-orange)] text-white hover:bg-orange-600 transition-colors whitespace-nowrap"
+                >
+                  Search
+                </button>
+              </div>
             </div>
 
             {/* Mobile Actions & Menu Toggle */}
@@ -275,12 +278,7 @@ const Navigation = () => {
                   Search Profiles
                 </button>
 
-                <button
-                  className="btn-primary w-full gap-2 justify-center"
-                >
-                  <Download className="w-4 h-4" />
-                  Get the app
-                </button>
+                {/* Removed mobile "Get the app" button */}
               </div>
             </div>
           </div>

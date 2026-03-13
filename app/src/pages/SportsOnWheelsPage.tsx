@@ -108,13 +108,13 @@ const SportsOnWheelsPage = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await api.createBooking({
-                businessName: formData.orgName,
-                stallType: 'SERVICE_INQUIRY',
-                requirements: `Type: ${formData.eventType} | Message: ${formData.message}`,
-                contactPerson: formData.orgName,
-                email: formData.email,
-                phone: formData.phone
+            await api.submitEventBooking({
+                request_type: 'event_booking',
+                organization_name: formData.orgName.trim(),
+                event_type: formData.eventType || 'Event',
+                email: formData.email.trim(),
+                phone_number: formData.phone?.trim() || '',
+                description: formData.message?.trim() || '',
             });
             setIsSubmitted(true);
             setTimeout(() => {

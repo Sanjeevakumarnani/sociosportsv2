@@ -3,20 +3,24 @@ import OTPInput from './OTPInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
+export type VerifyResult = boolean | { success: false; message: string; variant?: 'error' | 'info' };
+
 interface OTPModalProps {
     isOpen: boolean;
     onClose: () => void;
-    email: string;
-    onVerify: (otp: string) => Promise<boolean>;
+    email?: string;
+    phone?: string;
+    onVerify: (otp: string) => Promise<VerifyResult>;
     onResend: () => Promise<void>;
 }
 
-const OTPModal: React.FC<OTPModalProps> = ({ isOpen, onClose, email, onVerify, onResend }) => {
+const OTPModal: React.FC<OTPModalProps> = ({ isOpen, onClose, email, phone, onVerify, onResend }) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
     const [loading, setLoading] = useState(false);
     const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
     const [error, setError] = useState('');
+    const [infoMessage, setInfoMessage] = useState('');
     const [canResend, setCanResend] = useState(false);
 
     useFocusTrap(modalRef, isOpen, onClose);
@@ -28,6 +32,7 @@ const OTPModal: React.FC<OTPModalProps> = ({ isOpen, onClose, email, onVerify, o
         setTimeLeft(300);
         setCanResend(false);
         setError('');
+        setInfoMessage('');
 
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
@@ -58,15 +63,24 @@ const OTPModal: React.FC<OTPModalProps> = ({ isOpen, onClose, email, onVerify, o
         if (otp.length !== 6) return;
         setLoading(true);
         setError('');
+        setInfoMessage('');
         try {
-            const success = await onVerify(otp);
-            if (success) {
+            const result = await onVerify(otp);
+            if (result === true) {
                 onClose();
             } else {
-                setError('Invalid or expired OTP. Please try again.');
+                const message = typeof result === 'object' && result?.message
+                    ? result.message
+                    : 'Invalid or expired OTP. Please try again.';
+                const variant = typeof result === 'object' && result?.variant ? result.variant : 'error';
+                if (variant === 'info') {
+                    setInfoMessage(message);
+                } else {
+                    setError(message);
+                }
             }
         } catch (err) {
-            setError('Verification failed. Please try again.');
+            setError(err instanceof Error ? err.message : 'Verification failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -111,8 +125,10 @@ const OTPModal: React.FC<OTPModalProps> = ({ isOpen, onClose, email, onVerify, o
                         </div>
                         <h2 className="text-2xl font-bold text-slate-800">Verify Your Identity</h2>
                         <p className="text-slate-600 mt-2">
-                            We've sent a 6-digit code to <br />
-                            <span className="font-semibold text-blue-600">{email}</span>
+                            {phone
+                                ? <>We've sent a 6-digit code to your mobile <br /><span className="font-semibold text-blue-600">{phone}</span></>
+                                : <>We've sent a 6-digit code to <br /><span className="font-semibold text-blue-600">{email}</span></>
+                            }
                         </p>
                     </div>
 
@@ -122,6 +138,14 @@ const OTPModal: React.FC<OTPModalProps> = ({ isOpen, onClose, email, onVerify, o
                         <p className="text-red-500 text-center text-sm mb-4 font-medium animate-pulse">
                             {error}
                         </p>
+                    )}
+
+                    {infoMessage && (
+                        <div className="mb-4 p-4 rounded-lg bg-slate-100 border border-slate-200 text-center">
+                            <p className="text-slate-700 text-sm font-medium">
+                                {infoMessage}
+                            </p>
+                        </div>
                     )}
 
                     <div className="text-center mt-6">

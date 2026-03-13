@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, UserCheck, Globe, LineChart, MapPin, Zap, Trophy } from 'lucide-react';
-import CoachRegistrationModal from '../components/CoachRegistrationModal';
+import SportsPersonModal from '../components/SportsPersonModal';
 import VenueRegistrationModal from '../components/VenueRegistrationModal';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -183,15 +183,12 @@ const CoachOrganizer = () => {
                 </div>
 
                 {/* Call to Action */}
-                <div className="reveal-item mt-auto">
+              <div className="reveal-item mt-auto">
+                {role.id === 'coach' && (
                   <button
                     onClick={() => {
-                      if (role.id === 'organizer') {
-                        setIsVenueModalOpen(true);
-                      } else {
-                        // Open Coach Modal
-                        setIsCoachModalOpen(true);
-                      }
+                      // Open Coach registration (SportsPersonModal with TRAINER identity)
+                      setIsCoachModalOpen(true);
                     }}
                     className="btn-primary w-full py-4 rounded-2xl flex items-center justify-center gap-3 group/cta shadow-lg"
                   >
@@ -200,16 +197,18 @@ const CoachOrganizer = () => {
                     </span>
                     <ArrowRight className="w-4 h-4 transition-transform group-hover/cta:translate-x-1" />
                   </button>
-                </div>
+                )}
+              </div>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <CoachRegistrationModal
+      <SportsPersonModal
         isOpen={isCoachModalOpen}
         onClose={() => setIsCoachModalOpen(false)}
+        defaultIdentity="TRAINER"
       />
 
       <VenueRegistrationModal

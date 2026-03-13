@@ -19,7 +19,12 @@ import SEOHead from '../components/SEOHead';
 import StructuredData from '../components/StructuredData';
 
 const HomePage = () => {
-    // ... useEffect ...
+    useEffect(() => {
+        if (window.location.hash === '#athletes') {
+            const el = document.getElementById('athletes');
+            el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, []);
 
     const organizationSchema = {
         "@context": "https://schema.org",

@@ -1,7 +1,75 @@
 import { toast } from 'react-hot-toast';
 import type { LoginCredentials, RegistrationData, AuthResponse, User, Job, Event, Vendor, Athlete, Trainer, Inquiry } from '../types/api';
+import CryptoJS from 'crypto-js';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// From .env (API_URL); fallback: relative for browser (Vite proxy), localhost for SSR
+const envApiUrl = (import.meta as any).env?.API_URL;
+export const API_URL =
+  envApiUrl && typeof envApiUrl === 'string' && envApiUrl.trim()
+    ? envApiUrl.trim().replace(/\/+$/, '')
+    : typeof window !== 'undefined'
+      ? '/api'
+      : 'http://localhost:5000/api';
+
+// Helper: decrypt API responses that include `encResults` (AES-encrypted JSON)
+const decryptEncResultsIfPresent = (payload: any) => {
+    if (!payload || typeof payload !== 'object') return payload;
+
+    const enc = (payload as any).encResults;
+    const key = (import.meta as any).env?.API_DECRYPT_KEY;
+
+    if (!enc || typeof enc !== 'string' || !key) return payload;
+
+    try {
+        const bytes = (CryptoJS as any).AES.decrypt(enc, key);
+        const decrypted = bytes.toString((CryptoJS as any).enc.Utf8);
+        if (!decrypted) return payload;
+
+        const parsed = JSON.parse(decrypted);
+        return parsed;
+    } catch (error) {
+        console.error('Failed to decrypt encResults payload', error);
+        return payload;
+    }
+};
+
+/** Normalize athlete/coach search response to { rows, count } regardless of backend shape (plain or from decrypted encResults). */
+const normalizeSearchResponse = (payload: any): { rows: any[]; count: number } => {
+    if (!payload || typeof payload !== 'object') {
+        return { rows: [], count: 0 };
+    }
+    const obj = payload as Record<string, any>;
+    // Already normalized
+    if (Array.isArray(obj.rows) && typeof obj.count === 'number') {
+        return { rows: obj.rows, count: obj.count };
+    }
+    // Nested under .data
+    if (obj.data && typeof obj.data === 'object') {
+        const inner = obj.data as Record<string, any>;
+        if (Array.isArray(inner.rows) && typeof inner.count === 'number') {
+            return { rows: inner.rows, count: inner.count };
+        }
+        if (Array.isArray(inner.rows)) {
+            return { rows: inner.rows, count: inner.rows.length };
+        }
+        if (Array.isArray(inner)) return { rows: inner, count: inner.length };
+    }
+    // Common alternate keys: list, result, data (array), items
+    const rows =
+        Array.isArray(obj.rows) ? obj.rows
+            : Array.isArray(obj.list) ? obj.list
+                : Array.isArray(obj.result) ? obj.result
+                    : Array.isArray(obj.data) ? obj.data
+                        : Array.isArray(obj.items) ? obj.items
+                            : [];
+    const count =
+        typeof obj.count === 'number' ? obj.count
+            : typeof obj.total === 'number' ? obj.total
+                : typeof obj.totalCount === 'number' ? obj.totalCount
+                    : typeof obj.total_count === 'number' ? obj.total_count
+                        : rows.length;
+    return { rows, count };
+};
 
 export const api = {
     // Auth
@@ -99,6 +167,89 @@ export const api = {
         });
         if (!response.ok) throw new Error('Final registration step failed');
         return response.json();
+    },
+
+    // User (phone login + OTP + create athlete)
+    userLogin: async (phonenumber: string) => {
+        const response = await fetch(`${API_URL}/User/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phonenumber }),
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || 'Failed to send OTP');
+        }
+        return response.json();
+    },
+    userLoginWithOtp: async (phonenumber: string, otp: string) => {
+        const response = await fetch(`${API_URL}/User/loginwithotp?otp=${encodeURIComponent(otp)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phonenumber }),
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || 'Invalid or expired OTP');
+        }
+        return response.json();
+    },
+    commonUpload: async (file: File, modulename: string) => {
+        const form = new FormData();
+        form.append('singleFile', file);
+        const response = await fetch(`${API_URL}/Common/Upload?modulename=${encodeURIComponent(modulename)}`, {
+            method: 'POST',
+            body: form,
+        });
+        if (!response.ok) throw new Error('Upload failed');
+        return response.json();
+    },
+    userCreate: async (data: {
+        first_name: string;
+        phonenumber: string;
+        dob?: string;
+        user_type?: string;
+        photos?: any[];
+        images?: any[];
+        professional_title?: string;
+        technical_overview?: string;
+        weight?: string;
+        [key: string]: any;
+    }) => {
+        const response = await fetch(`${API_URL}/User/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || 'Failed to create profile');
+        }
+        return response.json();
+    },
+
+    getProfessionalHistory: async (userId: number | string, page: number = 0, pageSize: number = 10) => {
+        const params = new URLSearchParams();
+        params.append('user_id', String(userId));
+        params.append('page', String(page));
+        params.append('page_size', String(pageSize));
+
+        const response = await fetch(`${API_URL}/ProfessionalHistory/list?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to fetch professional history');
+        const raw = await response.json();
+        return decryptEncResultsIfPresent(raw);
+    },
+
+    getEducationHistory: async (userId: number | string, page: number = 0, pageSize: number = 10) => {
+        const params = new URLSearchParams();
+        params.append('user_id', String(userId));
+        params.append('page', String(page));
+        params.append('page_size', String(pageSize));
+
+        const response = await fetch(`${API_URL}/Education/list?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to fetch education history');
+        const raw = await response.json();
+        return decryptEncResultsIfPresent(raw);
     },
 
     // Users
@@ -558,6 +709,42 @@ export const api = {
         return response.json();
     },
 
+    /** General enquiry: POST /api/Settings/helpsupport with fixed request_type & subject; rest from form. No Authorization. */
+    submitHelpSupport: async (data: { full_name: string; email: string; phonenumber: string; description: string }) => {
+        const response = await fetch(`${API_URL}/Settings/helpsupport`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                request_type: 'public_help',
+                subject: 'Help Request',
+                full_name: data.full_name,
+                email: data.email,
+                phonenumber: data.phonenumber,
+                description: data.description,
+            }),
+        });
+        if (!response.ok) throw new Error('Failed to submit help request');
+        return response.json();
+    },
+
+    /** Book an event: POST /api/Settings/helpsupport with request_type event_booking. No Authorization. */
+    submitEventBooking: async (data: {
+        request_type: 'event_booking';
+        organization_name: string;
+        event_type: string;
+        email: string;
+        phone_number: string;
+        description: string;
+    }) => {
+        const response = await fetch(`${API_URL}/Settings/helpsupport`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to submit event booking');
+        return response.json();
+    },
+
     updateInquiryStatus: async (id: string, status: string, token: string) => {
         const response = await fetch(`${API_URL}/inquiries/${id}/status`, {
             method: 'PUT',
@@ -684,6 +871,73 @@ export const api = {
         return response.json();
     },
 
+    // Society search (public; response may be encrypted)
+    searchSocieties: async (query: string, isScreenFor: string = 'verifycertificate') => {
+        const params = new URLSearchParams();
+        params.append('q', query.trim());
+        if (isScreenFor) params.append('is_screen_for', isScreenFor);
+        const response = await fetch(`${API_URL}/Society/search?${params.toString()}`, {
+            headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) throw new Error('Failed to search societies');
+        const raw = await response.json();
+        const decrypted = decryptEncResultsIfPresent(raw);
+        if (Array.isArray(decrypted)) return decrypted;
+        if (decrypted && Array.isArray((decrypted as any).rows)) return (decrypted as any).rows;
+        if (decrypted && Array.isArray((decrypted as any).data)) return (decrypted as any).data;
+        return [];
+    },
+
+    // Event Certificates (public)
+    getEventCertificates: async (options: { page?: number; pageSize?: number; certificateId?: string } = {}) => {
+        const { page = 0, pageSize = 10, certificateId } = options;
+        const params = new URLSearchParams();
+        params.append('page', String(page));
+        params.append('page_size', String(pageSize));
+        if (certificateId && certificateId.trim()) {
+            params.append('certificate_id', certificateId.trim());
+        }
+
+        const response = await fetch(`${API_URL}/EventCirtificate?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to fetch event certificates');
+        const raw = await response.json();
+        return normalizeSearchResponse(raw);
+    },
+
+    /** MasterInterest list for sport dropdown: GET /MasterInterest/list?category=General&title=<search> */
+    masterInterest: {
+        list: async (params: { category: string; title?: string }) => {
+            const searchParams = new URLSearchParams();
+            searchParams.append('category', params.category);
+            if (params.title != null && params.title.trim() !== '') {
+                searchParams.append('title', params.title.trim());
+            }
+            const response = await fetch(`${API_URL}/MasterInterest/list?${searchParams.toString()}`);
+            if (!response.ok) throw new Error('Failed to fetch sports list');
+            const raw = await response.json();
+            const data = decryptEncResultsIfPresent(raw);
+            const rows = Array.isArray(data?.rows) ? data.rows : Array.isArray(data?.list) ? data.list : Array.isArray(data) ? data : [];
+            // Backend structure example: [{ category: 'Sports', titles: [{ title: 'Cricket', id: '1' }] }]
+            const flattened: { id: number; title: string }[] = [];
+            for (const r of rows) {
+                if (Array.isArray((r as any).titles)) {
+                    for (const t of (r as any).titles) {
+                        flattened.push({
+                            id: Number(t.id ?? t.Id ?? 0),
+                            title: String(t.title ?? t.Title ?? ''),
+                        });
+                    }
+                } else {
+                    flattened.push({
+                        id: Number((r as any).id ?? (r as any).Id ?? 0),
+                        title: String((r as any).title ?? (r as any).Title ?? ''),
+                    });
+                }
+            }
+            return flattened;
+        },
+    },
+
     // Sports Profiles (Public Search)
     sportsProfiles: {
         create: async (profileData: any) => {
@@ -695,10 +949,25 @@ export const api = {
             if (!response.ok) throw new Error('Failed to create sports profile');
             return response.json();
         },
-        search: async (query: string) => {
-            const response = await fetch(`${API_URL}/profiles/search?query=${encodeURIComponent(query)}`);
+        /**
+         * Public search for athletes & trainers using /User/athletes-trainers.
+         * - If query is empty: uses pagination (page=0&page_size=10) to fetch recent profiles.
+         * - If query is provided: uses ?keyword=<query> for keyword search.
+         * Backend may return only encrypted payload in `encResults`; we decrypt and normalize to { rows, count }.
+         */
+        search: async (query: string, page: number = 0, pageSize: number = 10) => {
+            const params = new URLSearchParams();
+            params.append('page', String(page));
+            params.append('page_size', String(pageSize));
+            if (query && query.trim().length > 0) {
+                params.append('keyword', query.trim());
+            }
+
+            const response = await fetch(`${API_URL}/User/athletes-trainers?${params.toString()}`);
             if (!response.ok) throw new Error('Failed to search profiles');
-            return response.json();
+            const raw = await response.json();
+            const decrypted = decryptEncResultsIfPresent(raw);
+            return normalizeSearchResponse(decrypted);
         },
         getById: async (sportsId: string) => {
             const response = await fetch(`${API_URL}/profiles/${encodeURIComponent(sportsId)}`);
