@@ -14,6 +14,7 @@ interface EventCertificate {
   MasterInterest?: { id: number; title: string };
   sport_detail?: { id: string | number; title: string };
   Society?: { id: number; name: string };
+  createdAt?: string;
   certificate_type?: string;
 }
 
