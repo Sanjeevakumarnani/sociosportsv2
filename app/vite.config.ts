@@ -4,7 +4,7 @@ import { defineConfig } from "vite"
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: './',
+  base: '/',
   envPrefix: ['VITE_', 'API_'],
   plugins: [react()],
   resolve: {
