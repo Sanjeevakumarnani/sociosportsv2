@@ -591,6 +591,7 @@ const AthleteIdentity = () => {
                 src="/images/athlete_medal_profile.png"
                 alt="Athlete with medal - SocioSports profile success"
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>

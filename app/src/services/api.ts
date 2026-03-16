@@ -11,6 +11,11 @@ export const API_URL =
       ? '/api'
       : 'http://localhost:5000/api';
 
+// Lightweight in-memory cache for idempotent GET-like calls (per-tab, non-persistent).
+// This helps avoid unnecessary duplicate network calls when multiple components
+// request the same CMS content or shared resources on first render.
+const cmsCache = new Map<string, Promise<any>>();
+
 // Helper: decrypt API responses that include `encResults` (AES-encrypted JSON)
 const decryptEncResultsIfPresent = (payload: any) => {
     if (!payload || typeof payload !== 'object') return payload;
@@ -376,9 +381,18 @@ export const api = {
     // Content (CMS)
     cms: {
         get: async (slug: string) => {
-            const response = await fetch(`${API_URL}/content/${slug}`);
-            if (!response.ok) return null;
-            return response.json();
+            if (cmsCache.has(slug)) {
+                return cmsCache.get(slug)!;
+            }
+
+            const promise = (async () => {
+                const response = await fetch(`${API_URL}/content/${slug}`);
+                if (!response.ok) return null;
+                return response.json();
+            })();
+
+            cmsCache.set(slug, promise);
+            return promise;
         },
         update: async (slug: string, data: any, token: string) => {
             const response = await fetch(`${API_URL}/content/${slug}`, {

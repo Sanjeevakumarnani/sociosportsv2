@@ -97,28 +97,28 @@ const Navigation = () => {
               : 'bg-transparent'
           }`}
       >
-        <div className="px-4 sm:px-6 lg:px-8 xl:px-12">
+        <div className="pl-2 sm:pl-4 lg:pl-6 xl:pl-8 pr-4 sm:pr-6 lg:pr-8 xl:pr-12 pt-4 sm:pt-5">
           <div className="flex items-center gap-4 min-h-[56px]">
             {/* Logo */}
             <Link
               to="/"
               aria-label="SocioSports Home - Visit the homepage"
-              className="flex items-center gap-2 group logo-container"
+              className="flex items-center justify-center group logo-container leading-none -mt-3"
             >
               <img
                 src="/images/logo.png"
                 alt="SocioSports Logo"
-                className={`h-12 md:h-14 w-auto object-contain transition-all duration-300 transform group-hover:scale-105 ${theme === 'light' ? 'brightness-0' : ''
+                className={`h-12 md:h-14 w-auto object-contain object-center block transition-all duration-300 transform group-hover:scale-105 ${theme === 'light' ? 'brightness-0' : ''
                   }`}
               />
             </Link>
 
             {/* Responsive Navigation Pill – height aligned with search bar */}
-            <div className={`hidden lg:flex items-center gap-1 p-1.5 rounded-full border backdrop-blur-md transition-all duration-500 ${isHomePage && !isScrolled
+            <div className={`hidden lg:flex items-center gap-1 p-1.5 rounded-full backdrop-blur-md transition-all duration-500 ${isHomePage && !isScrolled
               ? theme === 'light'
-                ? 'bg-white/90 border-gray-200/50 shadow-sm'
-                : 'bg-black/50 border-white/10'
-              : 'bg-[var(--bg-secondary)]/50 border-[var(--border)]'
+                ? 'bg-white/90 border border-gray-200/50 shadow-sm'
+                : 'bg-black/50 border border-white/10'
+              : 'bg-[var(--bg-secondary)]/50'
               }`}>
               {navLinks.map((link) => {
                 const isActive = link.href === '/'

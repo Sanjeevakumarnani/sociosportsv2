@@ -228,6 +228,7 @@ const ExploreDirectory = () => {
                                                 src={profile.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`}
                                                 alt={profile.name}
                                                 className="w-full h-full object-cover"
+                                                loading="lazy"
                                             />
                                         </div>
                                         <div className="min-w-0">

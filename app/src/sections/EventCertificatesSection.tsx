@@ -27,7 +27,7 @@ const EventCertificateCard = ({ cert }: { cert: EventCertificate }) => {
     : '';
 
   return (
-    <article className="bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--border)] hover:border-[var(--accent-orange)]/40 transition-all duration-300 flex flex-col">
+    <article className="bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--border)] hover:border-[var(--accent-orange)]/40 transition-all duration-300 flex flex-col h-full">
       <div className="aspect-video bg-[var(--bg-primary)] flex items-center justify-center overflow-hidden">
         {primaryImage ? (
           <img
@@ -115,7 +115,7 @@ const EventCertificatesSection = () => {
   return (
     <section className="px-4 sm:px-6 lg:px-8 xl:px-12 py-12 md:py-16">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-8 h-0.5 bg-[var(--accent-orange)]" />
             <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent-orange)]">
@@ -128,7 +128,7 @@ const EventCertificatesSection = () => {
               className="hidden sm:inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[var(--border)] text-xs font-bold uppercase tracking-widest text-[var(--text-primary)] hover:border-[var(--accent-orange)] hover:text-[var(--accent-orange)] transition-colors"
               aria-label="Browse all event certificates"
             >
-              Browse all posts
+              Browse all certificates
               <ChevronRight className="w-3 h-3" />
             </Link>
           )}
@@ -140,13 +140,13 @@ const EventCertificatesSection = () => {
           Latest participation and winner certificates issued through SocioSports events.
         </p>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
           {items.map((cert) => (
             <button
               key={cert.id}
               type="button"
               onClick={() => setSelected(cert)}
-              className="text-left"
+              className="text-left h-full"
             >
               <EventCertificateCard cert={cert} />
             </button>

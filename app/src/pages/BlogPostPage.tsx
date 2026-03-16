@@ -71,89 +71,18 @@ When you next face a seemingly impossible challenge, remember the penguin. If a 
 
 The ice is cold, the journey is long, but step by step, you'll get there.`
     },
-    {
-        id: "coach-sunita",
-        title: 'Coach Sunita\'s Empty Facility: A Solved Problem',
-        excerpt: 'How one booking app transformed a barren badminton court into a thriving academy in just 3 months. The power of digital visibility.',
-        image: '/images/coach_sunita_court.png',
-        author: { name: 'Case Study' },
-        category: 'Success Stories',
-        type: 'article',
-        createdAt: new Date().toISOString(),
-        content: `# From Empty Courts to Full Sessions: A Coach's Digital Transformation
-
-When Coach Sunita Reddy opened her badminton academy in the outskirts of Hyderabad, she had world-class facilities, international coaching certifications, and a burning passion to develop young talent. What she didn't have was students.
-
-## The Problem
-
-For three months, Sunita's six courts sat mostly empty. She had invested her savings into the facility—professional lighting, international-standard flooring, even a small gym for conditioning. But location proved to be her biggest challenge.
-
-"Parents in the city didn't know I existed," Sunita recalls. "And those who found me were hesitant to travel so far for something they weren't sure about."
-
-The numbers were stark: 40 sessions per month capacity, but only 12 bookings on average. Revenue covered barely 30% of operational costs. Sunita was considering closing down.
-
-## The Discovery
-
-A fellow coach mentioned SocioSports during a tournament. "Just list your academy," he said. "What do you have to lose?"
-
-Sunita was skeptical. She had tried social media advertising with minimal results. Another app felt like another expense of time and money she couldn't afford.
-
-But she created a profile anyway. She uploaded photos of her facility, listed her certifications, and set her availability. The whole process took 20 minutes.
-
-## The First Week
-
-Within days, Sunita received her first inquiry through the platform. A parent named Rajesh was looking for badminton coaching for his 12-year-old daughter.
-
-"He told me he'd been searching for months but couldn't find quality coaching within his budget," Sunita explains. "The app showed him my academy, my credentials, and available slots. He booked a trial session right there."
-
-That trial converted into a monthly subscription. Then another parent found her. Then another.
-
-## The Transformation
-
-By the end of month one, Sunita's bookings had doubled to 24 sessions. Month two saw 52 sessions. By month three, she was running at 78 sessions—nearly double her original capacity.
-
-How did this happen?
-
-**Visibility**: The app's location-based search meant parents in a 15-kilometer radius could now find her academy. Previously invisible, she was now discoverable.
-
-**Trust**: Verified credentials and reviews from early students built credibility. Parents could see her certifications, read testimonials, and book with confidence.
-
-**Convenience**: The booking system eliminated phone tag and scheduling confusion. Parents could see available slots and book instantly.
-
-**Community**: As students joined, they rated the academy highly. The algorithm promoted her facility to more potential students.
-
-## The Numbers Today
-
-Six months later, Sunita's academy operates at near-full capacity:
-
-- 85+ sessions per month
-- 45 regular students
-- 3 assistant coaches hired
-- Weekend camps fully booked
-- Waiting list for prime evening slots
-
-Revenue has increased 4x. More importantly, Sunita is doing what she loves: developing young badminton players.
-
-## Lessons for Coaches
-
-Sunita's story offers insights for any coach struggling to fill their facility:
-
-**1. Visibility is survival**: The best coaching in the world means nothing if potential students can't find you. Digital platforms aren't optional—they're essential.
-
-**2. Build trust systematically**: Certifications, photos, and reviews create the trust that converts browsers into bookers. Invest time in your profile.
-
-**3. Remove friction**: Every barrier between a parent's interest and a booking is a lost opportunity. Make it easy to find, evaluate, and book your services.
-
-**4. Start small, scale smart**: Sunita didn't need hundreds of students overnight. She needed enough to build momentum. The rest followed.
-
-## The Bigger Picture
-
-Sunita's success reflects a broader shift in how sports services are discovered and consumed. The old model—word of mouth, local reputation, years of slow growth—is being supplemented by digital platforms that accelerate connection.
-
-For coaches, this is both opportunity and imperative. The question isn't whether to embrace digital tools, but how quickly you can do so effectively.
-
-As Sunita puts it: "I spent three months waiting for students to find me. Now I realize I needed to be where they were looking."`
-    },
+    // Coach earnings / facility case study temporarily hidden
+    // {
+    //     id: "coach-sunita",
+    //     title: 'Coach Sunita\'s Empty Facility: A Solved Problem',
+    //     excerpt: 'How one booking app transformed a barren badminton court into a thriving academy in just 3 months. The power of digital visibility.',
+    //     image: '/images/coach_sunita_court.png',
+    //     author: { name: 'Case Study' },
+    //     category: 'Success Stories',
+    //     type: 'article',
+    //     createdAt: new Date().toISOString(),
+    //     content: `...`
+    // },
     {
         id: "1",
         title: 'Telangana\'s Boxing Prodigy: Nikhat Zareen\'s Journey',

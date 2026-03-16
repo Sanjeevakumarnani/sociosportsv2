@@ -138,6 +138,7 @@ const SportsPocket = () => {
                                 src="/images/app_screens_collage.png"
                                 alt="SocioSports Mobile App"
                                 className="w-full h-auto drop-shadow-2xl rounded-3xl border border-white/5"
+                                loading="lazy"
                                 style={{
                                     maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
                                     WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',

@@ -79,6 +79,7 @@ const SimpleFooter = () => {
                                     src="/images/logo.png"
                                     alt="SocioSports"
                                     className="h-10 w-auto"
+                                    loading="lazy"
                                 />
                             </div>
                             <p className="text-sm max-w-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
@@ -135,10 +136,10 @@ const SimpleFooter = () => {
 
                             <div className="flex gap-4">
                                 <Link to="/mobile-app" className="hover:opacity-80 transition-opacity">
-                                    <img src="/images/app-store-badge.svg" alt="Download on the App Store" className="h-10 w-auto" />
+                                    <img src="/images/app-store-badge.svg" alt="Download on the App Store" className="h-10 w-auto" loading="lazy" />
                                 </Link>
                                 <a href="https://play.google.com/store/apps/details?id=com.sociobeats&pcampaignid=web_share" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                                    <img src="/images/google-play-badge.svg" alt="Get it on Google Play" className="h-10 w-auto" />
+                                    <img src="/images/google-play-badge.svg" alt="Get it on Google Play" className="h-10 w-auto" loading="lazy" />
                                 </a>
                             </div>
                         </div>

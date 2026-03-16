@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, Users, Calendar, Trophy, User, ChevronLeft, ChevronRight, Award, Compass, Truck, Search } from 'lucide-react';
+import { ArrowRight, Users, Calendar, Trophy, User, Award, Compass, Truck, Search } from 'lucide-react';
 import SportsPersonModal from '../components/SportsPersonModal';
 import SearchModal from '../components/SearchModal';
 import { useTheme } from '../contexts/ThemeContext';
@@ -237,14 +237,6 @@ const Hero = () => {
     setCurrentImageIndex(index);
   }, []);
 
-  const nextImage = useCallback(() => {
-    setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-  }, [heroImages.length]);
-
-  const prevImage = useCallback(() => {
-    setCurrentImageIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
-  }, [heroImages.length]);
-
   // Manual navigation for features
   const goToFeature = useCallback((index: number) => {
     setCurrentFeatureIndex(index);
@@ -377,7 +369,8 @@ const Hero = () => {
                 src={getThemeImagePath(image.src)}
                 alt={image.alt}
                 className="w-full h-full object-cover"
-                loading={index === currentImageIndex ? "eager" : "lazy"}
+                loading={index === 0 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : undefined}
               />
             </div>
           ))}
@@ -388,22 +381,6 @@ const Hero = () => {
           <div className="absolute top-32 right-8 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full">
             <span className="text-white/80 text-sm font-medium">{heroImages[currentImageIndex].sport}</span>
           </div>
-
-          {/* Image Navigation Arrows */}
-          <button
-            onClick={prevImage}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center transition-transform hover:scale-110 z-20 group"
-            aria-label="View previous hero image"
-          >
-            <ChevronLeft className="w-8 h-8 text-white/70 group-hover:text-white transition-colors" />
-          </button>
-          <button
-            onClick={nextImage}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center transition-transform hover:scale-110 z-20 group"
-            aria-label="View next hero image"
-          >
-            <ChevronRight className="w-8 h-8 text-white/70 group-hover:text-white transition-colors" />
-          </button>
 
           {/* Image Navigation Dots */}
           <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2 z-20">

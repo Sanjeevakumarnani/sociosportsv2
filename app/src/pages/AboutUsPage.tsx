@@ -72,8 +72,52 @@ const AboutUsPage = () => {
 
 
 
-    const [leadership, setLeadership] = useState<any[]>([]);
-    const [advisors, setAdvisors] = useState<any[]>([]);
+    const defaultLeadership = [
+        {
+            name: 'Phanindra KKV',
+            role: 'Founder & Chief Executive Officer',
+            image: '/Phanindra KKV.png',
+            linkedin: '#',
+            bio: 'IIM Business Management graduate with 15+ years of experience. Founder of MaxPark with revenue of ₹11.6 Cr. Executed government projects including ISRO / BDL project experience.',
+            quote: '',
+            category: 'LEADERSHIP',
+        },
+        {
+            name: 'Md Javeed (Scientist)',
+            role: 'Technology & Innovation Director',
+            image: '/Dr. Javeed MD.png',
+            linkedin: '#',
+            bio: 'Scientist & Guinness World Record achiever with 12 international research awards and 20+ international research articles. 12 patents and recognized with national-level innovation awards.',
+            quote: '',
+            category: 'LEADERSHIP',
+        },
+        {
+            name: 'M Srinivas (Trainer)',
+            role: 'Head of Sports Events & Training',
+            image: '',
+            linkedin: '#',
+            bio: 'Sports Authority Telangana coach with 15+ years of experience. Trained 40,000+ athletes, medal-winning trainees, and large event specialist from 100 to 10,000 participants.',
+            quote: '',
+            category: 'LEADERSHIP',
+        },
+    ];
+
+    const [leadership, setLeadership] = useState<any[]>(defaultLeadership);
+    const defaultAdvisors = [
+        {
+            name: 'Shri Dr. N.S. Dileep, Ph.D.',
+            role: 'Academic & University Sports Advisor',
+            bio: 'Professor & Physical Director – Jawaharlal Nehru Technological University (JNTU). A highly respected academician, sports administrator, and physical education leader with decades of experience in developing university-level sports ecosystems. Known for his discipline, integrity, and commitment to excellence.',
+            category: 'ADVISOR',
+        },
+        {
+            name: 'T Vijaya Kumar',
+            role: 'Mentor & Strategic Advisor – Business Growth',
+            bio: 'Retired IAS Officer with extensive experience in governance, urban development, and education administration. Served as Commissioner in Education Department, Telangana Government, and held key positions including Vice Chancellor of Mahatma Gandhi University.',
+            category: 'ADVISOR',
+        },
+    ];
+    const [advisors, setAdvisors] = useState<any[]>(defaultAdvisors);
 
     useEffect(() => {
         const fetchTeam = async () => {
@@ -82,8 +126,11 @@ const AboutUsPage = () => {
                 const { api } = await import('../services/api');
                 const members = await api.getTeam();
 
-                setLeadership(members.filter((m: any) => m.category === 'LEADERSHIP'));
-                setAdvisors(members.filter((m: any) => m.category === 'ADVISOR'));
+                const leadershipMembers = members.filter((m: any) => m.category === 'LEADERSHIP');
+                const advisorMembers = members.filter((m: any) => m.category === 'ADVISOR');
+
+                setLeadership(leadershipMembers.length > 0 ? leadershipMembers : defaultLeadership);
+                setAdvisors(advisorMembers.length > 0 ? advisorMembers : defaultAdvisors);
             } catch (error) {
                 console.error('Failed to fetch team members:', error);
             }
@@ -236,7 +283,7 @@ const AboutUsPage = () => {
             </section>
 
             {/* 6. Leadership Section - Redesigned Intro Cards */}
-            <section className="py-24 container mx-auto px-6 about-section border-t border-[var(--border)]">
+            <section className="py-16 container mx-auto px-6 about-section border-t border-[var(--border)]">
                 <div className="mb-16 text-center animate-on-scroll">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-orange)]/10 border border-[var(--accent-orange)]/20 mb-4">
                         <Users className="w-3 h-3 text-[var(--accent-orange)]" />
@@ -246,13 +293,17 @@ const AboutUsPage = () => {
                     <p className="text-base text-[var(--text-secondary)] font-medium max-w-xl mx-auto">Merging visionary technology with deep sports science expertise to redefine play.</p>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
                     {leadership.map((member, i) => (
-                        <div key={i} className="group relative flex flex-col bg-[var(--bg-secondary)] rounded-[40px] border border-[var(--border)] overflow-hidden transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl hover:shadow-[var(--accent-orange)]/10 animate-on-scroll h-full">
+                        <div key={i} className="group relative flex flex-col bg-[var(--bg-secondary)] rounded-3xl border border-[var(--border)] overflow-hidden transition-all duration-400 hover:-translate-y-2 hover:shadow-lg hover:shadow-[var(--accent-orange)]/10 animate-on-scroll h-full">
                             {/* Top Image Section */}
-                            <div className="relative aspect-[4/5] overflow-hidden">
+                            <div className="relative h-72 md:h-80 overflow-hidden flex items-end justify-center bg-gradient-to-b from-[var(--bg-primary)] to-transparent">
                                 {member.image ? (
-                                    <img src={member.image} alt={member.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    <img
+                                        src={member.image}
+                                        alt={member.name}
+                                        className="h-full w-auto object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+                                    />
                                 ) : (
                                     <div className="w-full h-full bg-[var(--bg-primary)] flex items-center justify-center">
                                         <Users className="w-16 h-16 text-[var(--text-secondary)]/20" />

@@ -4,12 +4,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Users, Dumbbell, Medal, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
+import SearchModal from '../components/SearchModal';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Ecosystem = () => {
     const sectionRef = useRef<HTMLElement>(null);
     const [loading, setLoading] = useState(true);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     const [cards, setCards] = useState([
         {
@@ -208,7 +210,14 @@ const Ecosystem = () => {
                                     {/* CTA */}
                                     <div
                                         className="inline-flex items-center gap-3 text-sm font-bold uppercase tracking-wider transition-all duration-300 group-hover:gap-5"
-                                        style={{ color: card.color }}
+                                        style={{ color: card.color, cursor: card.title === 'Sports Networking' ? 'pointer' : 'inherit' }}
+                                        onClick={(e) => {
+                                            if (card.title === 'Sports Networking') {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setIsSearchOpen(true);
+                                            }
+                                        }}
                                     >
                                         <span>{card.cta}</span>
                                         <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-2" />
@@ -227,6 +236,7 @@ const Ecosystem = () => {
                     })}
                 </div>
             </div>
+            <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
         </section>
     );
 };

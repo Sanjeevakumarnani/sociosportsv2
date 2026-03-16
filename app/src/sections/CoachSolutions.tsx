@@ -71,16 +71,17 @@ const CoachSolutions = () => {
                 "Competition from unverified trainers"
             ]
         },
-        {
-            target: "For Facility Managers",
-            icon: Calendar,
-            color: "#3b82f6",
-            points: [
-                "Low utilization during off-peak hours",
-                "Fragmented offline booking systems",
-                "Lack of marketing visibility"
-            ]
-        }
+        // Facility Managers card temporarily hidden on request
+        // {
+        //     target: "For Facility Managers",
+        //     icon: Calendar,
+        //     color: "#3b82f6",
+        //     points: [
+        //         "Low utilization during off-peak hours",
+        //         "Fragmented offline booking systems",
+        //         "Lack of marketing visibility"
+        //     ]
+        // }
     ];
 
     const solutions = [
@@ -114,7 +115,7 @@ const CoachSolutions = () => {
                         </h2>
                     </div>
 
-                    <div className="problems-grid grid md:grid-cols-2 gap-8">
+                    <div className="problems-grid grid gap-8 max-w-4xl mx-auto">
                         {problems.map((prob, idx) => {
                             const Icon = prob.icon;
                             return (
