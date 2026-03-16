@@ -1,0 +1,17 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.sociobeats",
+      "sha256_cert_fingerprints": [
+        "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C",
+        "8C:4B:C8:0E:EA:AF:AE:34:B1:E1:2F:5E:72:76:9A:6E:F0:5F:1C:83:26:68:8D:DB:33:B1:A9:A1:2C:3D:DA:6E",
+        "73:C7:84:3C:25:4D:9E:B5:08:75:AF:80:16:D0:D0:12:EB:F4:3E:AB:E9:96:32:B2:5F:76:19:65:FC:C4:E8:0B",
+        "9E:5E:48:B7:D9:98:D9:D6:61:F7:42:F2:4E:FD:53:FE:9B:69:A4:30:B7:FB:C3:8D:DA:07:0E:51:E0:D9:95:E7"
+      ]
+    }
+  }
+]
