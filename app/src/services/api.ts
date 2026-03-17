@@ -723,14 +723,14 @@ export const api = {
         return response.json();
     },
 
-    /** General enquiry: POST /api/Settings/helpsupport with fixed request_type & subject; rest from form. No Authorization. */
-    submitHelpSupport: async (data: { full_name: string; email: string; phonenumber: string; description: string }) => {
+    /** General enquiry / Partner with Us: POST /api/Settings/helpsupport. Same API; subject distinguishes type. No Authorization. */
+    submitHelpSupport: async (data: { full_name: string; email: string; phonenumber: string; description: string; subject?: string }) => {
         const response = await fetch(`${API_URL}/Settings/helpsupport`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 request_type: 'public_help',
-                subject: 'Help Request',
+                subject: data.subject ?? 'Help Request',
                 full_name: data.full_name,
                 email: data.email,
                 phonenumber: data.phonenumber,
@@ -756,6 +756,24 @@ export const api = {
             body: JSON.stringify(data),
         });
         if (!response.ok) throw new Error('Failed to submit event booking');
+        return response.json();
+    },
+
+    /** Book a stall: same API as event booking (Settings/helpsupport), differentiated by request_type + stall_type for mail. */
+    submitStallBooking: async (data: {
+        request_type: 'stall_booking';
+        stall_type: string;
+        organization_name: string;
+        email: string;
+        phone_number: string;
+        description: string;
+    }) => {
+        const response = await fetch(`${API_URL}/Settings/helpsupport`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to submit stall booking');
         return response.json();
     },
 

@@ -677,35 +677,35 @@ const SportsOnWheelsPage = () => {
 
             {/* Deployment Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setShowModal(false)} />
-                    <div className="relative bg-[var(--bg-secondary)] border border-white/10 rounded-[32px] overflow-hidden max-w-lg w-full shadow-2xl">
-                        <div className="p-6 md:p-10">
-                            <button onClick={() => setShowModal(false)} className="absolute top-8 right-8 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
-                                <X className="w-6 h-6" />
+                    <div className="relative my-auto bg-[var(--bg-secondary)] border border-white/10 rounded-[32px] overflow-hidden max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl">
+                        <div className="p-6 md:p-8 overflow-y-auto overscroll-contain">
+                            <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 z-10 p-2 rounded-full bg-[var(--bg-primary)]/80 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--accent-orange)]/20 transition-colors" aria-label="Close">
+                                <X className="w-5 h-5" />
                             </button>
 
                             {isSubmitted ? (
-                                <div className="text-center py-16">
-                                    <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6 border border-green-500/20">
-                                        <Check className="w-10 h-10 text-green-500" />
+                                <div className="text-center py-8">
+                                    <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4 border border-green-500/20">
+                                        <Check className="w-8 h-8 text-green-500" />
                                     </div>
-                                    <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase">Inquiry Received</h3>
-                                    <p className="text-[var(--text-secondary)] font-bold mt-2">Our logistics team will reach out within 24 hours.</p>
+                                    <h3 className="text-xl font-black text-[var(--text-primary)] uppercase">Inquiry Received</h3>
+                                    <p className="text-sm text-[var(--text-secondary)] font-medium mt-1">Our logistics team will reach out within 24 hours.</p>
                                 </div>
                             ) : (
                                 <>
-                                    <div className="flex items-center gap-4 mb-8">
-                                        <div className="w-14 h-14 rounded-2xl bg-[var(--accent-orange)]/10 flex items-center justify-center">
-                                            <Calendar className="w-7 h-7 text-[var(--accent-orange)]" />
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-12 h-12 rounded-xl bg-[var(--accent-orange)]/10 flex items-center justify-center shrink-0">
+                                            <Calendar className="w-6 h-6 text-[var(--accent-orange)]" />
                                         </div>
                                         <div>
-                                            <h3 className="text-2xl font-black text-[var(--text-primary)] leading-none uppercase">Book an Event</h3>
-                                            <p className="text-sm text-[var(--text-secondary)] font-bold mt-1">Tell us about your event requirements</p>
+                                            <h3 className="text-xl font-black text-[var(--text-primary)] leading-tight uppercase">Book an Event</h3>
+                                            <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Tell us about your event requirements</p>
                                         </div>
                                     </div>
 
-                                    <form onSubmit={handleSubmit} className="space-y-4 text-left">
+                                    <form onSubmit={handleSubmit} className="space-y-3 text-left">
                                         <div className="relative group">
                                             <Briefcase className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)] group-focus-within:text-[var(--accent-orange)] transition-colors" />
                                             <input
@@ -715,7 +715,7 @@ const SportsOnWheelsPage = () => {
                                                 onChange={handleChange}
                                                 required
                                                 placeholder="Your organization"
-                                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl py-4 pl-14 pr-6 text-[var(--text-primary)] font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all placeholder:text-[var(--text-secondary)] shadow-sm"
+                                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-4 text-[var(--text-primary)] text-sm font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all placeholder:text-[var(--text-secondary)] shadow-sm"
                                             />
                                         </div>
 
@@ -728,7 +728,7 @@ const SportsOnWheelsPage = () => {
                                                     value={formData.eventType}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl py-4 pl-14 pr-6 text-[var(--text-primary)] font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all shadow-sm appearance-none"
+                                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-3 pl-12 pr-10 text-[var(--text-primary)] text-sm font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all shadow-sm appearance-none"
                                                 >
                                                     <option value="" className="bg-[var(--bg-secondary)]">Select event type</option>
                                                     <option value="Residential League" className="bg-[var(--bg-secondary)]">Residential League</option>
@@ -750,7 +750,7 @@ const SportsOnWheelsPage = () => {
                                                     onChange={handleChange}
                                                     required
                                                     placeholder="your@email.com"
-                                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl py-4 pl-12 pr-4 text-[var(--text-primary)] font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all placeholder:text-[var(--text-secondary)] shadow-sm text-sm"
+                                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-3 pl-11 pr-4 text-[var(--text-primary)] text-sm font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all placeholder:text-[var(--text-secondary)] shadow-sm"
                                                 />
                                             </div>
                                             <div className="relative group">
@@ -762,7 +762,7 @@ const SportsOnWheelsPage = () => {
                                                     onChange={handleChange}
                                                     required
                                                     placeholder="7842983839"
-                                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl py-4 pl-12 pr-4 text-[var(--text-primary)] font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all placeholder:text-[var(--text-secondary)] shadow-sm text-sm"
+                                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-3 pl-11 pr-4 text-[var(--text-primary)] text-sm font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all placeholder:text-[var(--text-secondary)] shadow-sm"
                                                 />
                                             </div>
                                         </div>
@@ -776,7 +776,7 @@ const SportsOnWheelsPage = () => {
                                                     onChange={handleChange}
                                                     required
                                                     placeholder="Tell us about your event requirements..."
-                                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl py-4 pl-6 pr-6 text-[var(--text-primary)] font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all placeholder:text-[var(--text-secondary)] shadow-sm min-h-[120px] resize-none"
+                                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-3 pl-4 pr-4 text-[var(--text-primary)] text-sm font-medium outline-none focus:border-[var(--accent-orange)]/50 transition-all placeholder:text-[var(--text-secondary)] shadow-sm min-h-[100px] resize-none"
                                                 ></textarea>
                                             </div>
                                         </div>
@@ -784,7 +784,7 @@ const SportsOnWheelsPage = () => {
                                         <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="w-full bg-[var(--accent-orange)] hover:bg-[var(--accent-orange)]/90 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-base shadow-xl shadow-[var(--accent-orange)]/20 flex items-center justify-center gap-3 transition-all transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full bg-[var(--accent-orange)] hover:bg-[var(--accent-orange)]/90 text-white py-3.5 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl shadow-[var(--accent-orange)]/20 flex items-center justify-center gap-2 transition-all transform hover:translate-y-[-1px] disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {isSubmitting ? (
                                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

@@ -136,25 +136,14 @@ const ContactSection = () => {
                         has_event_details: true
                     });
                 } else {
-                    // General Inquiry: use Settings/helpsupport API (fixed request_type & subject)
-                    if (formData.reason === 'General Inquiry') {
-                        await api.submitHelpSupport({
-                            full_name: formData.name,
-                            email: formData.email,
-                            phonenumber: formData.phone || '',
-                            description: formData.message
-                        });
-                    } else {
-                        // Partner with Us: use existing inquiry API
-                        const inquiryData = {
-                            name: formData.name,
-                            email: formData.email,
-                            phone: formData.phone,
-                            subject: formData.reason,
-                            message: formData.message
-                        };
-                        await api.createInquiry(inquiryData);
-                    }
+                    // General Inquiry & Partner with Us: same API (submitHelpSupport), subject set by reason
+                    await api.submitHelpSupport({
+                        full_name: formData.name,
+                        email: formData.email,
+                        phonenumber: formData.phone || '',
+                        description: formData.message,
+                        subject: formData.reason === 'Partner with Us' ? 'Partner with Us' : 'Help Request',
+                    });
 
                     trackEvent('submit_inquiry', {
                         type: formData.reason

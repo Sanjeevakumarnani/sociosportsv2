@@ -24,6 +24,7 @@ gsap.registerPlugin(ScrollTrigger);
 const VendorsPage = () => {
     const pageRef = useRef<HTMLDivElement>(null);
     const [isBookingOpen, setIsBookingOpen] = useState(false);
+    const [selectedStallType, setSelectedStallType] = useState<string | null>(null);
     const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const { trackEvent } = useAnalytics();
@@ -162,6 +163,7 @@ const VendorsPage = () => {
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 vendors-hero-text">
                         <button onClick={() => {
+                            setSelectedStallType(null);
                             setIsBookingOpen(true);
                             trackEvent('open_booking_modal', { source: 'hero_section' });
                         }} className="btn-primary px-10 py-4 rounded-full text-xs font-black uppercase tracking-widest shadow-2xl flex items-center gap-3">
@@ -274,6 +276,7 @@ const VendorsPage = () => {
                                     </ul>
                                     <div className="pt-2">
                                         <button onClick={() => {
+                                            setSelectedStallType(stall.name);
                                             setIsBookingOpen(true);
                                             trackEvent('open_booking_modal', { source: 'stall_card', stall_type: stall.name });
                                         }} className="w-full py-3 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-primary)] font-black uppercase text-[9px] tracking-widest hover:bg-[var(--accent-orange)] hover:border-transparent cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]">
@@ -370,7 +373,8 @@ const VendorsPage = () => {
 
             <StallBookingModal
                 isOpen={isBookingOpen}
-                onClose={() => setIsBookingOpen(false)}
+                onClose={() => { setIsBookingOpen(false); setSelectedStallType(null); }}
+                initialStallType={selectedStallType ?? undefined}
             />
 
             <VendorProfileModal

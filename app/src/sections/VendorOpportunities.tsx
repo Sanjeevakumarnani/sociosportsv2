@@ -25,6 +25,7 @@ const VendorOpportunities = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedStallType, setSelectedStallType] = useState<string | null>(null);
   const { trackEvent } = useAnalytics();
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -155,13 +156,15 @@ const VendorOpportunities = () => {
     return () => ctx.revert();
   }, [events]);
 
-  const handleBookStall = (event: Event | null = null) => {
+  const handleBookStall = (event: Event | null = null, stall?: { name: string } | null) => {
     setSelectedEvent(event);
+    setSelectedStallType(stall?.name ?? null);
     setIsBookingOpen(true);
     trackEvent('open_stall_booking', {
       source: 'vendor_opportunities',
       event_id: event?.id,
       event_title: event?.title,
+      stall_type: stall?.name,
     });
   };
 
@@ -336,7 +339,7 @@ const VendorOpportunities = () => {
                   </ul>
 
                   <button
-                    onClick={() => handleBookStall()}
+                    onClick={() => handleBookStall(null, stall)}
                     className="w-full py-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-primary)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--accent-orange)] hover:text-white hover:border-transparent transition-all flex items-center justify-center gap-2"
                   >
                     <Zap className="w-3.5 h-3.5" />
@@ -405,7 +408,9 @@ const VendorOpportunities = () => {
         onClose={() => {
           setIsBookingOpen(false);
           setSelectedEvent(null);
+          setSelectedStallType(null);
         }}
+        initialStallType={selectedStallType ?? undefined}
       />
     </section>
   );
