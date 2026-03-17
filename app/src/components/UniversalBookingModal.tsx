@@ -66,17 +66,15 @@ const UniversalBookingModal: React.FC<UniversalBookingModalProps> = ({ isOpen, o
                 { opacity: 0, scale: 0.95 },
                 { opacity: 1, scale: 1, duration: 0.4, ease: 'power3.out' }
             );
-            // Pre-fill only once when opening or when initialData specifically changes
-            if (initialData && !hasPrefilled.current) {
-                setTimeout(() => {
-                    setFormData(prev => ({
-                        ...prev,
-                        serviceType: initialData.title || prev.serviceType,
-                        date: initialData.date || prev.date
-                    }));
-                }, 0);
-                hasPrefilled.current = true;
+            // Pre-fill service type from selected card (never ask – type comes from card)
+            if (initialData?.title) {
+                setFormData(prev => ({
+                    ...prev,
+                    serviceType: initialData.title,
+                    date: initialData.date || prev.date
+                }));
             }
+            if (initialData) hasPrefilled.current = true;
         } else {
             document.body.style.overflow = 'unset';
             hasPrefilled.current = false;
@@ -307,86 +305,75 @@ const UniversalBookingModal: React.FC<UniversalBookingModalProps> = ({ isOpen, o
         }
 
         if (mode === 'SERVICE') {
+            const serviceTitle = initialData?.title || formData.serviceType || 'General Inquiry';
+            const canSubmit = formData.orgName?.trim() && formData.name?.trim() && formData.phone?.trim() && formData.email?.trim();
             return (
-                <>
-                    {step === 1 && (
-                        <div className="space-y-6">
-                            <div>
-                                <span className="text-[var(--accent-orange)] font-black text-[10px] uppercase tracking-widest mb-2 block">Step 01 / 02</span>
-                                <h2 className="text-3xl font-black text-[var(--text-primary)] uppercase tracking-tighter">Organization <span className="text-gradient">Details.</span></h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Organization / School Name</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 text-[var(--text-primary)] font-bold focus:border-[var(--accent-orange)] focus:outline-none"
-                                        placeholder="e.g. Greenwood High"
-                                        value={formData.orgName}
-                                        onChange={e => setFormData({ ...formData, orgName: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Interested Service</label>
-                                    <div className="p-4 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] font-bold opacity-80 cursor-not-allowed">
-                                        {initialData?.title || 'General Inquiry'}
-                                    </div>
-                                </div>
-                            </div>
-                            <button
-                                onClick={handleNext}
-                                disabled={!formData.orgName}
-                                className="w-full btn-primary mt-4"
-                            >
-                                Next Step
-                            </button>
-                        </div>
+                <div className="space-y-6">
+                    {initialData?.title && (
+                        <p className="text-sm text-[var(--accent-orange)] font-bold uppercase tracking-wider mb-2">
+                            Booking: {initialData.title}
+                        </p>
                     )}
-                    {step === 2 && (
-                        <div className="space-y-6">
-                            <div>
-                                <span className="text-[var(--accent-orange)] font-black text-[10px] uppercase tracking-widest mb-2 block">Step 02 / 02</span>
-                                <h2 className="text-3xl font-black text-[var(--text-primary)] uppercase tracking-tighter">Contact <span className="text-gradient">Person.</span></h2>
+                    <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter">Book <span className="text-gradient">this event</span></h2>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Organization / School Name</label>
+                            <input
+                                type="text"
+                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 text-[var(--text-primary)] font-bold focus:border-[var(--accent-orange)] focus:outline-none"
+                                placeholder="e.g. Greenwood High"
+                                value={formData.orgName}
+                                onChange={e => setFormData({ ...formData, orgName: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Event / service type (from your selection)</label>
+                            <div className="p-4 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] font-bold opacity-90">
+                                {serviceTitle}
                             </div>
-                            <div className="space-y-4">
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Contact Person Name</label>
+                            <input
+                                type="text"
+                                placeholder="Contact Person Name"
+                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 text-[var(--text-primary)] font-bold focus:border-[var(--accent-orange)] focus:outline-none"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Mobile Number</label>
                                 <input
-                                    type="text"
-                                    placeholder="Contact Person Name"
+                                    type="tel"
+                                    placeholder="Mobile Number"
                                     className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 text-[var(--text-primary)] font-bold focus:border-[var(--accent-orange)] focus:outline-none"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    value={formData.phone}
+                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                 />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input
-                                        type="tel"
-                                        placeholder="Mobile Number"
-                                        className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 text-[var(--text-primary)] font-bold focus:border-[var(--accent-orange)] focus:outline-none"
-                                        value={formData.phone}
-                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                    />
-                                    <input
-                                        type="email"
-                                        placeholder="Official Email"
-                                        className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 text-[var(--text-primary)] font-bold focus:border-[var(--accent-orange)] focus:outline-none"
-                                        value={formData.email}
-                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                    />
-                                </div>
                             </div>
-                            <div className="flex gap-4 mt-6">
-                                <button onClick={handleBack} className="px-6 py-4 rounded-full border border-[var(--border)] text-[var(--text-primary)] font-bold hover:bg-[var(--bg-primary)]">Back</button>
-                                <button
-                                    onClick={handleSendOtp}
-                                    disabled={!formData.name || !formData.phone || isSubmitting}
-                                    className="flex-1 btn-primary"
-                                >
-                                    {isSubmitting ? 'Sending OTP...' : 'Verify & Submit'}
-                                </button>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Email (for OTP)</label>
+                                <input
+                                    type="email"
+                                    placeholder="Official Email"
+                                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 text-[var(--text-primary)] font-bold focus:border-[var(--accent-orange)] focus:outline-none"
+                                    value={formData.email}
+                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                />
                             </div>
                         </div>
-                    )}
-                </>
-            )
+                    </div>
+                    <button
+                        onClick={handleSendOtp}
+                        disabled={!canSubmit || isSubmitting}
+                        className="w-full btn-primary py-4 mt-2"
+                    >
+                        {isSubmitting ? 'Sending OTP...' : 'Verify & Submit'}
+                    </button>
+                </div>
+            );
         }
 
         return null;

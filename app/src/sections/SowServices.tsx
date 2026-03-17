@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Home, Briefcase, School, Users, Check, ArrowRight, Star } from 'lucide-react';
-import UniversalBookingModal from '../components/UniversalBookingModal';
+import { Home, Briefcase, School, Users, Check, ArrowRight, Star, X, Send, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { api } from '../services/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,6 +21,9 @@ const SowServices = () => {
     const sectionRef = useRef<HTMLElement>(null);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [showBookingModal, setShowBookingModal] = useState(false);
+    const [bookingForm, setBookingForm] = useState({ name: '', email: '', phone: '', message: '' });
+    const [bookingSubmitting, setBookingSubmitting] = useState(false);
+    const [bookingSubmitted, setBookingSubmitted] = useState(false);
 
     const [headerContent, setHeaderContent] = useState({
         label: "Our Services",
@@ -127,7 +131,44 @@ const SowServices = () => {
 
     const handleBookEvent = (service: Service) => {
         setSelectedService(service);
+        setBookingSubmitted(false);
+        setBookingForm({ name: '', email: '', phone: '', message: '' });
         setShowBookingModal(true);
+    };
+
+    const handleCloseBookingModal = () => {
+        setShowBookingModal(false);
+        setSelectedService(null);
+        setBookingSubmitted(false);
+        setBookingForm({ name: '', email: '', phone: '', message: '' });
+    };
+
+    const handleBookingSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedService) return;
+        if (!bookingForm.name?.trim() || !bookingForm.email?.trim() || !bookingForm.message?.trim()) {
+            toast.error('Please fill in name, email, and message.');
+            return;
+        }
+        setBookingSubmitting(true);
+        try {
+            await api.submitEventBooking({
+                request_type: 'event_booking',
+                organization_name: bookingForm.name.trim(),
+                event_type: selectedService.title,
+                email: bookingForm.email.trim(),
+                phone_number: bookingForm.phone?.trim() || '',
+                description: bookingForm.message.trim(),
+            });
+            setBookingSubmitted(true);
+            toast.success('Request sent! Our event team will contact you shortly.');
+            setTimeout(handleCloseBookingModal, 2500);
+        } catch (err) {
+            console.error('Booking request failed', err);
+            toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+        } finally {
+            setBookingSubmitting(false);
+        }
     };
 
     return (
@@ -215,19 +256,86 @@ const SowServices = () => {
                 </div>
             </div>
 
-            {/* Booking Modal */}
-            <UniversalBookingModal
-                isOpen={showBookingModal}
-                onClose={() => {
-                    setShowBookingModal(false);
-                    setSelectedService(null);
-                }}
-                mode="SERVICE"
-                initialData={selectedService ? {
-                    id: selectedService.id,
-                    title: selectedService.title
-                } : null}
-            />
+            {/* Book Event Modal – same style as Contact Us event booking */}
+            {showBookingModal && selectedService && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={handleCloseBookingModal} aria-hidden />
+                    <div
+                        className="relative w-full max-w-lg bg-[var(--bg-secondary)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            onClick={handleCloseBookingModal}
+                            aria-label="Close"
+                            className="absolute top-4 right-4 p-2 rounded-full bg-[var(--bg-primary)] hover:bg-[var(--accent-orange)]/10 transition-colors z-10"
+                        >
+                            <X className="w-5 h-5 text-[var(--text-primary)]" />
+                        </button>
+                        <div className="p-6 md:p-8">
+                            {bookingSubmitted ? (
+                                <div className="text-center py-10">
+                                    <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
+                                        <Check className="w-10 h-10 text-green-500" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold mb-2 text-[var(--text-primary)]">Request sent!</h3>
+                                    <p className="text-[var(--text-secondary)]">Our event team will review your details and contact you shortly.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">Event Booking Details</h3>
+                                    <p className="text-sm text-[var(--accent-orange)] font-bold uppercase tracking-wider mb-6">
+                                        {selectedService.title}
+                                    </p>
+                                    <form onSubmit={handleBookingSubmit} className="space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <input
+                                                type="text"
+                                                placeholder="Your name"
+                                                required
+                                                value={bookingForm.name}
+                                                onChange={(e) => setBookingForm((f) => ({ ...f, name: e.target.value }))}
+                                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors text-[var(--text-primary)]"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Phone number"
+                                                value={bookingForm.phone}
+                                                onChange={(e) => setBookingForm((f) => ({ ...f, phone: e.target.value }))}
+                                                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors text-[var(--text-primary)]"
+                                            />
+                                        </div>
+                                        <input
+                                            type="email"
+                                            placeholder="Your email"
+                                            required
+                                            value={bookingForm.email}
+                                            onChange={(e) => setBookingForm((f) => ({ ...f, email: e.target.value }))}
+                                            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors text-[var(--text-primary)]"
+                                        />
+                                        <textarea
+                                            placeholder="Tell us about your event requirements..."
+                                            rows={4}
+                                            required
+                                            value={bookingForm.message}
+                                            onChange={(e) => setBookingForm((f) => ({ ...f, message: e.target.value }))}
+                                            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl py-4 px-5 focus:outline-none focus:border-[var(--accent-orange)]/50 transition-colors resize-none text-[var(--text-primary)]"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={bookingSubmitting}
+                                            className="w-full btn-primary gap-2 py-4 disabled:opacity-70 disabled:pointer-events-none"
+                                        >
+                                            {bookingSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                            {bookingSubmitting ? 'Sending...' : 'Submit Booking Request'}
+                                        </button>
+                                    </form>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 };
