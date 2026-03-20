@@ -57,6 +57,8 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
     const [profile, setProfile] = useState<SportsProfile>(initialProfile);
     const [loading, setLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
+    const [certificatesAwards, setCertificatesAwards] = useState<any[]>([]);
+    const [certAwardsLoading, setCertAwardsLoading] = useState(false);
     const imageSrc = !imageError && profile.image
         ? profile.image
         : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=0D8ABC&color=fff&size=512`;
@@ -125,13 +127,16 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
             if (!userId) return;
 
             try {
-                const [proRes, eduRes] = await Promise.all([
+                setCertAwardsLoading(true);
+                const [proRes, eduRes, caRes] = await Promise.all([
                     api.getProfessionalHistory(userId),
                     api.getEducationHistory(userId),
+                    api.getCertificatesAndAwards(userId, 0, 15),
                 ]);
 
                 const proRows = Array.isArray((proRes as any)?.rows) ? (proRes as any).rows : (Array.isArray(proRes) ? proRes : []);
                 const eduRows = Array.isArray((eduRes as any)?.rows) ? (eduRes as any).rows : (Array.isArray(eduRes) ? eduRes : []);
+                const caRows = Array.isArray((caRes as any)?.rows) ? (caRes as any).rows : (Array.isArray(caRes) ? caRes : []);
 
                 const mappedExperience = proRows.map((item: any) => ({
                     organization: item.organization_name,
@@ -161,8 +166,21 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
                     achievements: JSON.stringify(mappedExperience),
                     trainingHistory: JSON.stringify(mappedEducation),
                 }));
+
+                setCertificatesAwards(
+                    caRows.map((item: any) => ({
+                        recordType: item.record_type,
+                        technicalOverview: item.technicalOverview,
+                        cirtificates: item.cirtificates,
+                        awards: item.awards,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
+                    }))
+                );
             } catch (err) {
                 console.error('Failed to load professional / education history', err);
+            } finally {
+                setCertAwardsLoading(false);
             }
         };
 
@@ -703,6 +721,51 @@ const AthleteResume: React.FC<AthleteResumeProps> = ({ profile: initialProfile, 
                                 </section>
                             );
                         })()}
+
+                        {/* Certificates & Awards */}
+                        {certificatesAwards.length > 0 && (
+                            <section>
+                                <h2 className="text-lg font-black uppercase tracking-[0.4em] text-[#333] border-b-2 border-gray-100 pb-3 mb-8">
+                                    Certificates & Awards
+                                </h2>
+                                <div className="space-y-12">
+                                    {certificatesAwards.slice(0, 3).map((item: any, idx: number) => (
+                                        <div key={idx} className="flex gap-8 group">
+                                            <div className="w-48 pt-1">
+                                                <p className="text-xs font-black uppercase text-[#333]">
+                                                    {item.recordType || 'Achievement'}
+                                                </p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">
+                                                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '—'}
+                                                </p>
+                                            </div>
+                                            <div className="relative flex flex-col gap-2 flex-1 pl-8 border-l border-gray-200">
+                                                <div className="absolute top-2 -left-[5px] w-2.5 h-2.5 rounded-full bg-[#3D3D3D] border-2 border-white" />
+                                                <h4 className="text-base font-black text-[#333] uppercase leading-none">
+                                                    {item.recordType ? String(item.recordType).replace(/_/g, ' ') : 'Achievement'}
+                                                </h4>
+                                                <p className="text-sm text-gray-600 leading-relaxed font-medium whitespace-pre-wrap break-words">
+                                                    {item.technicalOverview || 'No technical overview provided.'}
+                                                </p>
+                                                {(Array.isArray(item.cirtificates) && item.cirtificates.length > 0) && (
+                                                    <p className="text-xs text-gray-500 font-medium">
+                                                        Certificates: {item.cirtificates.length}
+                                                    </p>
+                                                )}
+                                                {item.awards && (
+                                                    <p className="text-xs text-gray-500 font-medium">
+                                                        Awards: {Array.isArray(item.awards) ? item.awards.length : 'Available'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                {certAwardsLoading && (
+                                    <p className="mt-6 text-sm text-gray-500">Loading certificates & awards…</p>
+                                )}
+                            </section>
+                        )}
 
                         {/* Skills Grid */}
                         {skills.length > 0 && (

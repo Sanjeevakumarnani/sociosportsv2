@@ -257,6 +257,19 @@ export const api = {
         return decryptEncResultsIfPresent(raw);
     },
 
+    /** Certificates & Awards (public) */
+    getCertificatesAndAwards: async (userId: number | string, page: number = 0, pageSize: number = 15) => {
+        const params = new URLSearchParams();
+        params.append('user_id', String(userId));
+        params.append('page', String(page));
+        params.append('page_size', String(pageSize));
+
+        const response = await fetch(`${API_URL}/CirtificateAndAward/list?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to fetch certificates & awards');
+        const raw = await response.json();
+        return decryptEncResultsIfPresent(raw);
+    },
+
     // Users
     getUsers: async (token: string) => {
         const response = await fetch(`${API_URL}/users`, {
