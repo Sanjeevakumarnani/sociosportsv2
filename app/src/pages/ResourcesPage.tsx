@@ -1,5 +1,4 @@
 import KnowledgeHub from '../sections/KnowledgeHub';
-import EventCertificatesSection from '../sections/EventCertificatesSection';
 import CertificatesSection from '../sections/CertificatesSection';
 import SimpleFooter from '../sections/SimpleFooter';
 import SEOHead from '../components/SEOHead';
@@ -13,7 +12,6 @@ const BlogPage = () => {
             />
             <div className="pt-20">
                 <KnowledgeHub />
-                <EventCertificatesSection />
                 <CertificatesSection />
                 <SimpleFooter />
             </div>

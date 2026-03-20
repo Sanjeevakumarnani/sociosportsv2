@@ -40,6 +40,7 @@ const SimpleFooter = () => {
             { label: 'Tournaments', href: '/events' },
             { label: 'Market', href: '/market' },
             { label: 'Community', href: '/community' },
+            { label: 'Community Leaderboard', href: '/event-certificates' },
             { label: 'Resources', href: '/resources' },
         ],
         Company: [

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Camera, Upload, CheckCircle, X } from 'lucide-react';
 import { API_URL, api } from '../services/api';
 import SEOHead from '../components/SEOHead';
 
 const VerifyCertificatePage = () => {
   const { certificateId } = useParams<{ certificateId: string }>();
+  const navigate = useNavigate();
   const [existing, setExisting] = useState<any | null>(null);
   const [showExistsModal, setShowExistsModal] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -182,6 +183,15 @@ const VerifyCertificatePage = () => {
     }
   };
 
+  // After successful submit, take the user back to the public leaderboard/gallery.
+  useEffect(() => {
+    if (!submitted) return;
+    const t = window.setTimeout(() => {
+      navigate('/event-certificates');
+    }, 2000);
+    return () => window.clearTimeout(t);
+  }, [submitted, navigate]);
+
   if (!certificateId) {
     return (
       <main className="min-h-screen pt-24 px-4">
@@ -238,6 +248,13 @@ const VerifyCertificatePage = () => {
             >
               View details
             </button>
+          </div>
+        ) : !existing ? (
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-6 text-center">
+            <p className="text-[var(--text-primary)] mb-2">Certificate not found.</p>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Please check the certificate link or try again later.
+            </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-6">
@@ -392,7 +409,14 @@ const VerifyCertificatePage = () => {
             </div>
             <button
               type="submit"
-              disabled={!form.fullName.trim() || !selectedSociety || saving}
+              disabled={
+                !form.fullName.trim() ||
+                !selectedSociety ||
+                !selectedSport ||
+                !existing ||
+                !form.imageUrl ||
+                saving
+              }
               className="w-full btn-primary py-4 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
             >
               {saving ? 'Saving…' : 'Submit'}

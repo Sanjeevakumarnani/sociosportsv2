@@ -73,6 +73,7 @@ const ContactFooter = () => {
       { label: 'Coaches', href: '/#coaches' },
       { label: 'Events', href: '/#events' },
       { label: 'Community', href: '/#community' },
+      { label: 'Community Leaderboard', href: '/event-certificates' },
       // { label: 'Jobs', href: '/#jobs' }, // hidden
     ],
     Company: [
